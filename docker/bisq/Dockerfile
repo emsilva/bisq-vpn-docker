@@ -87,8 +87,10 @@ RUN --mount=type=cache,target=/cache \
     test -f /opt/bisq/bin/Bisq && \
     echo "Bisq v${BISQ_VERSION} installation complete at /opt/bisq/bin/Bisq"
 
-# Copy custom noVNC configuration
+# Copy custom noVNC configuration and favicon
 COPY config/novnc-index.html /usr/share/novnc/index.html
+COPY config/bisq-favicon.ico /usr/share/novnc/bisq-favicon.ico
+COPY config/bisq-favicon.png /usr/share/novnc/bisq-favicon.png
 
 # Create directories with correct ownership
 RUN mkdir -p /home/bisq/.vnc \
