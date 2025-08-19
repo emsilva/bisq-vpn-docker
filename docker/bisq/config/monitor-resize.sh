@@ -24,17 +24,19 @@ maximize_bisq() {
     BISQ_WIN=$(wmctrl -l | grep -i "bisq" | head -1 | awk '{print $1}')
     
     if [ -n "$BISQ_WIN" ]; then
-        # Try fullscreen first for best results
+        # Remove any existing window states first
+        wmctrl -i -r "$BISQ_WIN" -b remove,fullscreen,maximized_vert,maximized_horz
+        
+        # Remove window decorations (title bar, borders)
+        wmctrl -i -r "$BISQ_WIN" -b add,undecorated
+        
+        # Position window to fill entire screen without decorations
+        wmctrl -i -r "$BISQ_WIN" -e 0,0,0,$WIDTH,$HEIGHT
+        
+        # Alternative: Try fullscreen mode if undecorated doesn't work
         wmctrl -i -r "$BISQ_WIN" -b add,fullscreen
         
-        # If fullscreen doesn't work well, fall back to maximized
-        # Uncomment these lines if fullscreen causes issues:
-        # wmctrl -i -r "$BISQ_WIN" -b remove,fullscreen
-        # wmctrl -i -r "$BISQ_WIN" -b remove,maximized_vert,maximized_horz
-        # wmctrl -i -r "$BISQ_WIN" -e 0,0,0,$WIDTH,$HEIGHT
-        # wmctrl -i -r "$BISQ_WIN" -b add,maximized_vert,maximized_horz
-        
-        echo "Set Bisq window to fullscreen (${WIDTH}x${HEIGHT})"
+        echo "Set Bisq window to fullscreen without decorations (${WIDTH}x${HEIGHT})"
     else
         echo "Bisq window not found"
     fi
