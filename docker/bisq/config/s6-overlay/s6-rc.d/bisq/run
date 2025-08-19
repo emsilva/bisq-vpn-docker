@@ -1,0 +1,14 @@
+#!/command/with-contenv bash
+
+# Set proper environment for the bisq user
+export HOME=/home/bisq
+export USER=bisq
+export XDG_CACHE_HOME=/home/bisq/.cache
+export XDG_CONFIG_HOME=/home/bisq/.config
+export XDG_DATA_HOME=/home/bisq/.local/share
+
+# Create cache directories with proper ownership
+mkdir -p /home/bisq/.cache/dconf /home/bisq/.config /home/bisq/.local/share
+chown -R bisq:bisq /home/bisq/.cache /home/bisq/.config /home/bisq/.local
+
+exec s6-setuidgid bisq /home/bisq/start-bisq.sh

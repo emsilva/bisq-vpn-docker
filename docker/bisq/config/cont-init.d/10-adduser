@@ -1,0 +1,47 @@
+#!/command/with-contenv bash
+
+# Set default values
+PUID=${PUID:-1000}
+PGID=${PGID:-1000}
+
+# Get current bisq user info
+CURRENT_UID=$(id -u bisq)
+CURRENT_GID=$(id -g bisq)
+
+echo "Setting user bisq to PUID=${PUID} PGID=${PGID}"
+
+# Only modify if different from current
+if [[ "$PUID" != "$CURRENT_UID" ]] || [[ "$PGID" != "$CURRENT_GID" ]]; then
+    echo "Current UID/GID: $CURRENT_UID/$CURRENT_GID"
+    echo "Changing to: $PUID/$PGID"
+    
+    # Change group first
+    groupmod -g $PGID bisq
+    
+    # Change user
+    usermod -u $PUID -g $PGID bisq
+    
+    # Fix ownership of key directories
+    echo "Fixing ownership of directories..."
+    chown -R bisq:bisq \
+        /home/bisq \
+        /var/log/supervisor \
+        /var/run
+else
+    echo "UID/GID already correct"
+fi
+
+# Ensure directories exist with correct permissions
+mkdir -p \
+    /home/bisq/.vnc \
+    /home/bisq/.config/xfce4 \
+    /home/bisq/.local/share/Bisq \
+    /var/log/supervisor \
+    /var/run
+
+chown -R bisq:bisq \
+    /home/bisq \
+    /var/log/supervisor \
+    /var/run
+
+echo "User setup complete"

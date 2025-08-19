@@ -1,0 +1,24 @@
+# Docker volumes
+volumes/bisq-data/
+volumes/bisq-config/
+volumes/bisq-home/
+volumes/gluetun/
+
+# Environment files (keep .env.example but not .env)
+.env
+
+# Gluetun configuration (keep .example but not actual config)
+docker/gluetun/config/gluetun.env
+
+# System files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
