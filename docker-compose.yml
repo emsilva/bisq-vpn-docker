@@ -16,7 +16,6 @@ services:
     volumes:
       - ./volumes/gluetun:/gluetun
     env_file:
-      - docker/gluetun/config/gluetun.env
       - .env
     restart: unless-stopped
     healthcheck:
