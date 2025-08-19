@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable strict error handling  
+set -euo pipefail
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -187,6 +190,12 @@ clean_all() {
 
 # Main script
 check_docker
+
+# Handle case where no argument provided
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 1
+fi
 
 case "$1" in
     start)

@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Enable strict error handling  
+set -euo pipefail
+
 # Disable xfce4-screensaver by creating a no-op script
 touch /usr/local/bin/xfce4-screensaver
 chmod +x /usr/local/bin/xfce4-screensaver

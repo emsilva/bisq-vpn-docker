@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable strict error handling
+set -euo pipefail
+
 # Monitor for desktop resolution changes and resize Bisq window accordingly
 export DISPLAY=:1
 

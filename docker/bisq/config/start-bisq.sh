@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Enable strict error handling  
+set -euo pipefail
+
 echo "Waiting for desktop environment to start..."
 sleep 20
 

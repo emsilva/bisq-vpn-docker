@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable strict error handling  
+set -euo pipefail
+
 # Set proper environment
 export DISPLAY=:1
 export HOME=/home/bisq

@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Enable strict error handling  
+set -euo pipefail
+
 export DISPLAY=:1
 export HOME=/home/bisq
 unset SESSION_MANAGER

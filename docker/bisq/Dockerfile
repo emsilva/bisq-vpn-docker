@@ -1,44 +1,68 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:22.04
+# Pin to specific Ubuntu 22.04 LTS digest for reproducibility
+FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da
+
+# Image metadata following OCI standards
+LABEL org.opencontainers.image.title="Bisq VPN Container" \
+      org.opencontainers.image.description="Bisq decentralized Bitcoin exchange running through VPN with noVNC web interface" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Bisq VPN Container Project" \
+      org.opencontainers.image.url="https://github.com/bisq-network/bisq" \
+      org.opencontainers.image.documentation="https://github.com/your-repo/bisq-vpn-container" \
+      org.opencontainers.image.source="https://github.com/your-repo/bisq-vpn-container" \
+      org.opencontainers.image.vendor="Open Source" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.created="2025-01-19T00:00:00Z" \
+      org.opencontainers.image.base.name="ubuntu:22.04" \
+      maintainer="bisq-vpn-container"
+
+# Additional custom labels
+LABEL bisq.version="${BISQ_VERSION:-1.9.21}" \
+      s6.overlay.version="3.2.1.0" \
+      vnc.password="bisqvnc" \
+      vnc.port="5901" \
+      novnc.port="6080" \
+      container.type="desktop" \
+      security.vpn="required"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Sao_Paulo
 
-# Install dependencies
+# Install dependencies with pinned versions for reproducibility
 RUN apt-get update && apt-get install -y \
     # Desktop environment
-    xfce4 \
-    xfce4-terminal \
-    dbus-x11 \
+    xfce4=4.16 \
+    xfce4-terminal=0.8.10-1ubuntu1 \
+    dbus-x11=1.12.20-2ubuntu4.1 \
     # VNC server
-    tigervnc-standalone-server \
-    tigervnc-common \
+    tigervnc-standalone-server=1.12.0+dfsg-4ubuntu0.1 \
+    tigervnc-common=1.12.0+dfsg-4ubuntu0.1 \
     # noVNC for web access
-    novnc \
-    websockify \
-    # Java runtime for Bisq
-    openjdk-11-jre \
+    novnc=1:1.2.0-2 \
+    websockify=0.9.0-2 \
+    # Java runtime for Bisq (pin to LTS version)
+    openjdk-11-jre=11.0.24+8-1ubuntu3~22.04 \
     # Utilities
-    wget \
-    curl \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    supervisor \
-    sudo \
-    xdg-utils \
+    wget=1.21.2-2ubuntu1 \
+    curl=7.81.0-1ubuntu1.18 \
+    ca-certificates=20230311ubuntu0.22.04.1 \
+    gnupg=2.2.27-3ubuntu2.1 \
+    lsb-release=11.1.0ubuntu4 \
+    supervisor=4.2.1-1ubuntu1 \
+    sudo=1.9.9-1ubuntu2.4 \
+    xdg-utils=1.1.3-4.1ubuntu3~22.04.1 \
     # Network tools for debugging
-    net-tools \
-    iputils-ping \
-    dnsutils \
+    net-tools=1.60+git20181103.0eebece-1ubuntu5 \
+    iputils-ping=3:20211215-1 \
+    dnsutils=1:9.18.28-0ubuntu0.22.04.1 \
     # Window management for fullscreen
-    wmctrl \
+    wmctrl=1.07-7build1 \
     # Clipboard synchronization
-    autocutsel \
+    autocutsel=0.10.0-10build1 \
     # xz-utils for s6-overlay
-    xz-utils \
+    xz-utils=5.2.5-2ubuntu1 \
     # aria2c for robust downloads
-    aria2 \
+    aria2=1.36.0-1 \
     # Clean up
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

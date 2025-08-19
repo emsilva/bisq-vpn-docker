@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable strict error handling
+set -euo pipefail
+
 echo "========================================="
 echo "VPN Connection Test Script"
 echo "========================================="
@@ -99,15 +102,20 @@ check_ip_leak() {
     
     if [ -n "$LEAK_TEST" ]; then
         echo "IP Leak Test Results:"
+        # Safely parse JSON without potential injection
         echo "$LEAK_TEST" | python3 -c "
 import json
 import sys
-data = json.load(sys.stdin)
-print(f\"  Country: {data.get('country_name', 'Unknown')}\"
-print(f\"  City: {data.get('city_name', 'Unknown')}\"
-print(f\"  ISP: {data.get('isp_name', 'Unknown')}\"
-print(f\"  VPN Detection: {'Yes' if data.get('vpn', False) else 'No'}\"
-" 2>/dev/null || echo "$LEAK_TEST"
+try:
+    data = json.load(sys.stdin)
+    print(f\"  Country: {data.get('country_name', 'Unknown')}\")
+    print(f\"  City: {data.get('city_name', 'Unknown')}\")
+    print(f\"  ISP: {data.get('isp_name', 'Unknown')}\")
+    print(f\"  VPN Detection: {'Yes' if data.get('vpn', False) else 'No'}\")
+except (json.JSONDecodeError, KeyError) as e:
+    print(f\"  Error parsing leak test data: {e}\")
+    sys.exit(1)
+" 2>/dev/null || echo "  Failed to parse leak test data"
     else
         echo -e "${YELLOW}Could not perform leak test${NC}"
     fi
