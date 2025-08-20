@@ -1,0 +1,22 @@
+# Development compose - builds locally for testing fixes
+services:
+  bisq:
+    build:
+      context: docker/bisq
+      dockerfile: Dockerfile
+      args:
+        - BISQ_VERSION=${BISQ_VERSION:-1.9.21}
+    container_name: bisq-dev
+    ports:
+      - "6080:6080"
+      - "5901:5901"
+    volumes:
+      - ./volumes/bisq-data:/home/bisq/.local/share/Bisq
+      - ./volumes/bisq-config:/home/bisq/.config
+    environment:
+      - DISPLAY=:1
+      - VNC_PASSWORD=${VNC_PASSWORD:-bisqvnc}
+      - TZ=${TZ:-America/Sao_Paulo}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    restart: unless-stopped
