@@ -1,0 +1,281 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Weekly security scan
+    - cron: '0 2 * * 1'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # =============================================================================
+  # SECURITY AND CODE QUALITY CHECKS
+  # =============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Semgrep security scanner
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/docker
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  # =============================================================================
+  # SHELL SCRIPT LINTING
+  # =============================================================================
+  shellcheck:
+    name: Shell Script Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+        env:
+          SHELLCHECK_OPTS: -e SC1091 -e SC2155
+
+      - name: Check script executability
+        run: |
+          find scripts/ -name "*.sh" -type f | while read -r script; do
+            if [ ! -x "$script" ]; then
+              echo "Error: $script is not executable"
+              exit 1
+            fi
+          done
+
+  # =============================================================================
+  # DOCKERFILE LINTING
+  # =============================================================================
+  hadolint:
+    name: Dockerfile Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/bisq/Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true
+
+      - name: Upload Hadolint scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: hadolint-results.sarif
+
+  # =============================================================================
+  # BUILD AND TEST
+  # =============================================================================
+  build-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: [security-scan, shellcheck, hadolint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/bisq
+          file: ./docker/bisq/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BISQ_VERSION=1.9.21
+
+      - name: Test Docker image
+        run: |
+          # Build test image
+          docker build -t bisq-test:latest ./docker/bisq
+          
+          # Basic smoke test - check if container starts
+          docker run --rm -d --name bisq-test-container bisq-test:latest
+          sleep 10
+          
+          # Check if processes are running
+          docker exec bisq-test-container ps aux | grep -E "(s6|vnc|xfce)" || exit 1
+          
+          # Cleanup
+          docker stop bisq-test-container || true
+
+  # =============================================================================
+  # CONTAINER IMAGE SECURITY SCAN
+  # =============================================================================
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    needs: [build-test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: |
+          docker build -t bisq-scan:latest ./docker/bisq
+
+      - name: Run Trivy vulnerability scanner (image)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'bisq-scan:latest'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+
+      - name: Upload Trivy image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: 'bisq-scan:latest'
+          format: 'spdx-json'
+          output-file: 'sbom.spdx.json'
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+  # =============================================================================
+  # DOCKER COMPOSE VALIDATION
+  # =============================================================================
+  compose-validation:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: |
+          docker compose -f docker-compose.yml config > /dev/null
+          echo "✅ Main docker-compose.yml is valid"
+
+      - name: Validate docker-compose.secrets.yml
+        run: |
+          # Create dummy secret files for validation
+          mkdir -p secrets
+          echo "dummy" > secrets/wireguard_private_key.txt
+          echo "dummy" > secrets/wireguard_preshared_key.txt
+          
+          docker compose -f docker-compose.yml -f docker-compose.secrets.yml config > /dev/null
+          echo "✅ Secrets docker-compose.yml is valid"
+
+      - name: Check environment variables
+        run: |
+          # Check if all required variables are documented in .env.example
+          grep -E "^[A-Z_]+" .env.example | cut -d'=' -f1 | sort > env-example-vars.txt
+          grep -E "\$\{[A-Z_]+[:-]" docker-compose.yml | sed -E 's/.*\$\{([A-Z_]+)[:-].*/\1/' | sort | uniq > compose-vars.txt
+          
+          if ! diff -q env-example-vars.txt compose-vars.txt > /dev/null 2>&1; then
+            echo "❌ Environment variable mismatch between .env.example and docker-compose.yml"
+            echo "Variables in .env.example:"
+            cat env-example-vars.txt
+            echo "Variables in docker-compose.yml:"
+            cat compose-vars.txt
+            exit 1
+          fi
+          echo "✅ Environment variables are consistent"
+
+  # =============================================================================
+  # DEPLOY (OPTIONAL)
+  # =============================================================================
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [build-test, container-scan, compose-validation]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/bisq
+          file: ./docker/bisq/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -181,7 +181,7 @@ clean_all() {
         echo "Stopping and removing containers..."
         docker compose down -v
         echo "Removing Docker images..."
-        docker rmi bisq-vpn-container-bisq 2>/dev/null
+        docker rmi bisq-vpn-docker-bisq 2>/dev/null
         echo -e "${GREEN}✓ Cleanup complete${NC}"
     else
         echo "Cancelled"

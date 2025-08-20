@@ -7,9 +7,6 @@ volumes/gluetun/
 # Environment files (keep .env.example but not .env)
 .env
 
-# Secrets directory
-secrets/
-
 # Gluetun configuration (keep .example but not actual config)
 docker/gluetun/config/gluetun.env
 
@@ -25,3 +22,7 @@ docker/gluetun/config/gluetun.env
 
 # Logs
 *.log
+
+# Claude Code artifacts
+.claude/
+CLAUDE.md

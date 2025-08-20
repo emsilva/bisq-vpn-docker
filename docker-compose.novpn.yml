@@ -1,51 +1,18 @@
-services:
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    ports:
-      # VPN testing port
-      - 8000:8000
-      # Bisq noVNC web interface
-      - 6080:6080
-      # VNC direct access (optional)
-      - 5901:5901
-    volumes:
-      - ./volumes/gluetun:/gluetun
-    env_file:
-      - .env
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "sh", "-c", "ip link show tun0 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    # Resource limits for VPN container
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    # Logging configuration
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "5"
-        labels: "service=gluetun,component=vpn"
-    # Security configuration
-    security_opt:
-      - no-new-privileges:true
-      - seccomp:unconfined  # Required for VPN functionality
-      - apparmor:unconfined  # Required for network operations
+# =============================================================================
+# BISQ DOCKER COMPOSE - NO VPN VERSION
+# =============================================================================
+# This configuration runs Bisq without VPN protection.
+# 
+# ⚠️  WARNING: This exposes your real IP address to the Bisq network.
+# Only use this if:
+# - You're already behind a VPN at the system/router level
+# - You're comfortable with the privacy implications
+# - You're testing in a development environment
+#
+# Usage: docker compose -f docker-compose.novpn.yml up -d
+# =============================================================================
 
+services:
   bisq:
     build:
       context: docker/bisq
@@ -53,10 +20,11 @@ services:
       args:
         - BISQ_VERSION=${BISQ_VERSION:-1.9.21}
     container_name: bisq
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
+    ports:
+      # Bisq noVNC web interface
+      - "6080:6080"
+      # VNC direct access (optional)
+      - "5901:5901"
     volumes:
       # Main Bisq data directory - contains wallet, trade history, tor hidden service, etc.
       - ./volumes/bisq-data:/home/bisq/.local/share/Bisq
@@ -72,6 +40,7 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
+    
     # Resource limits for Bisq application container
     deploy:
       resources:
@@ -81,6 +50,7 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
+    
     # Logging configuration
     logging:
       driver: "json-file"
@@ -88,12 +58,23 @@ services:
         max-size: "200m"
         max-file: "10"
         labels: "service=bisq,component=application"
+    
     # Security configuration
     security_opt:
       - no-new-privileges:true
       # - seccomp=./security/bisq-seccomp.json  # Temporarily disabled for init system compatibility
+    
     # Additional security hardening
     read_only: false  # Cannot be read-only due to Bisq data writes
     tmpfs:
       - /tmp:noexec,nosuid,size=512m
       - /var/tmp:noexec,nosuid,size=256m
+
+# =============================================================================
+# NETWORK INFORMATION
+# =============================================================================
+# This setup uses Docker's default bridge network, which means:
+# - Your host IP will be visible to the Bisq network
+# - Tor hidden service will still work for P2P connections
+# - Consider using a system-level VPN for privacy
+# =============================================================================

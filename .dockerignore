@@ -1,0 +1,126 @@
+# =============================================================================
+# DOCKER IGNORE FILE
+# =============================================================================
+# Prevents sensitive and unnecessary files from being sent to Docker daemon
+# Improves build speed and security
+
+# =============================================================================
+# SENSITIVE FILES
+# =============================================================================
+# Environment files containing secrets
+.env
+.env.*
+!.env.example
+
+# VPN configuration files
+# VPN config files are handled via .env environment variables
+docker/gluetun/config/gluetun.env
+
+# SSH and other keys
+*.key
+*.pem
+*.p12
+*.jks
+id_rsa*
+id_ed25519*
+known_hosts
+
+# =============================================================================
+# DEVELOPMENT FILES
+# =============================================================================
+# Git repository
+.git/
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation (not needed in container)
+README.md
+CLAUDE.md
+*.md
+!docker/**/README.md
+
+# =============================================================================
+# BUILD ARTIFACTS AND LOGS
+# =============================================================================
+# Log files
+*.log
+logs/
+
+# Backup files
+backups/
+*.backup
+*.bak
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# =============================================================================
+# DOCKER AND COMPOSE
+# =============================================================================
+# Docker compose files (not needed in image build)
+docker-compose*.yml
+docker-compose*.yaml
+
+# =============================================================================
+# PERSISTENT DATA VOLUMES
+# =============================================================================
+# Volume data (should never be in image)
+volumes/
+data/
+
+# =============================================================================
+# SCRIPTS AND UTILITIES
+# =============================================================================
+# Scripts that run on host (not in container)
+scripts/
+*.sh
+!docker/**/config/*.sh
+
+# =============================================================================
+# TESTING AND CI/CD
+# =============================================================================
+# Test files
+test/
+tests/
+*.test
+*_test.go
+
+# CI/CD configuration
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# =============================================================================
+# NODE/NPM (if applicable)
+# =============================================================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# =============================================================================
+# ARCHIVES AND DOWNLOADS
+# =============================================================================
+# Archive files
+*.tar
+*.tar.gz
+*.tar.xz
+*.zip
+*.rar
+*.deb
+*.rpm
+
+# Download cache
+downloads/
+cache/

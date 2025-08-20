@@ -8,13 +8,13 @@ LABEL org.opencontainers.image.title="Bisq VPN Container" \
       org.opencontainers.image.version="1.0.0" \
       org.opencontainers.image.authors="Bisq VPN Container Project" \
       org.opencontainers.image.url="https://github.com/bisq-network/bisq" \
-      org.opencontainers.image.documentation="https://github.com/your-repo/bisq-vpn-container" \
-      org.opencontainers.image.source="https://github.com/your-repo/bisq-vpn-container" \
+      org.opencontainers.image.documentation="https://github.com/emsilva/bisq-vpn-docker" \
+      org.opencontainers.image.source="https://github.com/emsilva/bisq-vpn-docker" \
       org.opencontainers.image.vendor="Open Source" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.created="2025-01-19T00:00:00Z" \
       org.opencontainers.image.base.name="ubuntu:22.04" \
-      maintainer="bisq-vpn-container"
+      maintainer="bisq-vpn-docker"
 
 # Additional custom labels
 LABEL bisq.version="${BISQ_VERSION:-1.9.21}" \
@@ -28,41 +28,41 @@ LABEL bisq.version="${BISQ_VERSION:-1.9.21}" \
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Sao_Paulo
 
-# Install dependencies with pinned versions for reproducibility
+# Install dependencies (using latest available versions)
 RUN apt-get update && apt-get install -y \
     # Desktop environment
-    xfce4=4.16 \
-    xfce4-terminal=0.8.10-1ubuntu1 \
-    dbus-x11=1.12.20-2ubuntu4.1 \
+    xfce4 \
+    xfce4-terminal \
+    dbus-x11 \
     # VNC server
-    tigervnc-standalone-server=1.12.0+dfsg-4ubuntu0.1 \
-    tigervnc-common=1.12.0+dfsg-4ubuntu0.1 \
+    tigervnc-standalone-server \
+    tigervnc-common \
     # noVNC for web access
-    novnc=1:1.2.0-2 \
-    websockify=0.9.0-2 \
-    # Java runtime for Bisq (pin to LTS version)
-    openjdk-11-jre=11.0.24+8-1ubuntu3~22.04 \
+    novnc \
+    python3-websockify \
+    # Java runtime for Bisq
+    openjdk-11-jre \
     # Utilities
-    wget=1.21.2-2ubuntu1 \
-    curl=7.81.0-1ubuntu1.18 \
-    ca-certificates=20230311ubuntu0.22.04.1 \
-    gnupg=2.2.27-3ubuntu2.1 \
-    lsb-release=11.1.0ubuntu4 \
-    supervisor=4.2.1-1ubuntu1 \
-    sudo=1.9.9-1ubuntu2.4 \
-    xdg-utils=1.1.3-4.1ubuntu3~22.04.1 \
+    wget \
+    curl \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    supervisor \
+    sudo \
+    xdg-utils \
     # Network tools for debugging
-    net-tools=1.60+git20181103.0eebece-1ubuntu5 \
-    iputils-ping=3:20211215-1 \
-    dnsutils=1:9.18.28-0ubuntu0.22.04.1 \
+    net-tools \
+    iputils-ping \
+    dnsutils \
     # Window management for fullscreen
-    wmctrl=1.07-7build1 \
+    wmctrl \
     # Clipboard synchronization
-    autocutsel=0.10.0-10build1 \
+    autocutsel \
     # xz-utils for s6-overlay
-    xz-utils=5.2.5-2ubuntu1 \
+    xz-utils \
     # aria2c for robust downloads
-    aria2=1.36.0-1 \
+    aria2 \
     # Clean up
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

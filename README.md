@@ -1,470 +1,418 @@
-# Bisq VPN Container
+# Bisq Docker Container
 
-> A secure, containerized solution for running Bisq through a VPN with browser-based access
+> Run Bisq in your browser because installing desktop apps is for peasants
 
 [![Docker](https://img.shields.io/badge/Docker-20.10%2B-blue)](https://www.docker.com/)
 [![Bisq](https://img.shields.io/badge/Bisq-1.9.21-green)](https://bisq.network/)
 [![VPN](https://img.shields.io/badge/VPN-WireGuard-orange)](https://www.wireguard.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-## 🎯 Overview
+## ☕ Buy Me Coffee (If This Doesn't Suck)
 
-This project provides a production-ready Docker solution for running [Bisq](https://bisq.network/) (decentralized Bitcoin exchange) through a VPN connection. It combines security, privacy, and convenience by routing all Bisq traffic through WireGuard VPN while providing browser-based access via noVNC.
+If this actually works for you and saves you some pain:
 
-### Why Use This?
+**Bitcoin**: `bc1qkdjdfeev6rgkqsszam2qr8r9ytky80cdy8zu2x`  
+**Monero**: `48Q7CFnSjG4WGmYVusqnenggjEQSTw1QpJYuy7GaC1iifh8hZgUFmwi8cU84njepNVZRAjv6H687mBJgCYo5KBwW299BG9G`  
+**Ethereum**: `0x1963fa2E60606c7761Ea2242Ab00e0fBd096ba59`  
+**Solana**: `MNibKyhZka5NMNvRYJUiAG3MXaCTkAE1hACLuCX9RYr`
 
-- **Enhanced Privacy**: All Bisq traffic routed through VPN with automatic kill switch
-- **Browser Access**: No need for local Bisq installation - access from any modern browser
-- **Security First**: Isolated container environment with VPN-only network access
-- **Convenience**: Automatic updates, persistent data, and easy management scripts
-- **Platform Agnostic**: Run Bisq on any system that supports Docker
+---
 
-## ✨ Features
+## What This Actually Does
 
-### Core Functionality
-- 🔒 **WireGuard VPN Integration** - Fast, modern VPN protocol with kill switch protection
-- 🌐 **Web-Based Access** - Full Bisq GUI through noVNC (no client installation required)
-- 🔄 **Automatic Window Resizing** - Bisq window dynamically adjusts to browser size
-- 📋 **Clipboard Synchronization** - Seamless copy/paste between host and container
-- 💾 **Persistent Data Storage** - Wallet and settings preserved across restarts
-- 🚀 **One-Click Updates** - Automated Bisq version management
-- 🧅 **Tor Integration** - Full P2P connectivity through Tor network
+Look, I got tired of installing Bisq on every machine I use. So I containerized it and made it accessible through a web browser. Now you can trade Bitcoin from anywhere without dealing with desktop app nonsense.
 
-### Technical Features
-- **DNS over TLS** - Encrypted DNS queries via Cloudflare
-- **Process Supervision** - Automatic restart of failed services
-- **Health Monitoring** - Built-in health checks for all components
-- **Optimized Desktop** - Minimal XFCE environment without distractions
-- **Multi-Architecture** - Supports AMD64 and ARM64 platforms
+### The Good Stuff
 
-## 📋 Prerequisites
+- **Browser-based Bisq** — Access the full GUI from any modern browser
+- **Auto-resize magic** — Window actually follows your browser size (took way too long to get this right)
+- **Copy/paste works** — Because basic functionality shouldn't be hard
+- **Your data persists** — Wallet and settings survive container restarts
+- **Easy updates** — One script, done
+- **Actually secure** — Containers, resource limits, the works
 
-### System Requirements
-- **Docker**: Version 20.10 or higher
-- **Docker Compose**: Version 2.0 or higher
-- **RAM**: Minimum 4GB (8GB recommended)
-- **Storage**: 10GB free space minimum
-- **Network**: Stable internet connection
+### About That VPN Thing
 
-### VPN Requirements
-- Active VPN subscription supporting WireGuard
-- WireGuard configuration file from your provider
-- VPN endpoint that allows P2P/Tor traffic
+Real talk: **VPN is NOT for privacy**. Tor already handles that perfectly fine.
 
-## 🚀 Quick Start
+The VPN option exists because some ISPs are jerks and block Tor connections. If your ISP does this annoying thing, route through a VPN first. Otherwise, skip it.
 
-### 1. Clone the Repository
+- **ISP blocks Tor?** → Use VPN bypass
+- **ISP doesn't care?** → Direct connection (faster, simpler)
+
+Your P2P trades still go through Tor either way. VPN just gets you to the internet when your ISP is being difficult.
+
+## Quick Start (Actually Quick)
+
+### Option 1: Normal People Setup
+
 ```bash
-git clone https://github.com/yourusername/bisq-vpn-container.git
-cd bisq-vpn-container
+git clone https://github.com/emsilva/bisq-vpn-docker.git
+cd bisq-vpn-docker
+cp .env.example .env
+# Defaults are fine for most people
+docker compose -f docker-compose.novpn.yml up -d
 ```
 
-### 2. Configure VPN
-Copy the WireGuard template and add your VPN settings:
+### Option 2: My ISP Is A Pain Setup
+
 ```bash
-# Copy the template
-cp docker/gluetun/config/wireguard.conf.example docker/gluetun/config/wireguard.conf
-
-# Edit with your VPN provider's settings
-nano docker/gluetun/config/wireguard.conf
+git clone https://github.com/emsilva/bisq-vpn-docker.git
+cd bisq-vpn-docker
+cp .env.example .env
+# Edit .env with your VPN stuff
+docker compose up -d
 ```
 
-**Important**: Replace all `YOUR_*` placeholders with actual values from your VPN provider.
+Then go to **http://localhost:6080** and use password `bisqvnc`.
 
-### 3. Extract VPN Settings
-Extract the required values from your WireGuard config and update `docker-compose.yml`:
-```yaml
-environment:
-  - WIREGUARD_PRIVATE_KEY=your_private_key_here
-  - WIREGUARD_ADDRESSES=your_address_here
-  - WIREGUARD_PUBLIC_KEY=server_public_key_here
-  - WIREGUARD_ENDPOINT_IP=server_ip_here
-  - WIREGUARD_ENDPOINT_PORT=server_port_here
+Wait like 2 minutes for Bisq to actually start up (Java, am I right?).
+
+## Prerequisites
+
+You need Docker. If you don't have Docker, get Docker. Version 20.10+ works.
+
+Resource-wise:
+- **4GB RAM minimum** (8GB if you don't hate yourself)
+- **10GB disk space** (Bisq isn't tiny)
+- **2+ CPU cores** (because waiting sucks)
+
+For the VPN option, you also need a VPN that supports WireGuard. Most decent ones do.
+
+## Detailed Setup
+
+### Step 1: Get The Code
+
+```bash
+git clone https://github.com/emsilva/bisq-vpn-docker.git
+cd bisq-vpn-docker
 ```
 
-**Important**: 
-- Use IP address for `WIREGUARD_ENDPOINT_IP`, not hostname
-- Remove any IPv6 addresses from `WIREGUARD_ADDRESSES`
+### Step 2: Configuration
 
-### 4. Start the Containers
+```bash
+cp .env.example .env
+```
+
+### Step 3A: Direct Connection (Recommended)
+
+Most people should do this:
+
+```bash
+# Edit .env if you want (defaults are fine)
+nano .env
+
+# Start it up
+docker compose -f docker-compose.novpn.yml up -d
+```
+
+The important bits in `.env`:
+```env
+BISQ_VERSION=1.9.21          # Latest version
+VNC_PASSWORD=bisqvnc         # Change if you care
+TZ=America/Sao_Paulo         # Your timezone
+PUID=1000                    # Your user ID
+PGID=1000                    # Your group ID
+```
+
+### Step 3B: VPN Bypass (ISP Haters Only)
+
+If your ISP blocks Tor like some kind of authoritarian regime:
+
+```bash
+nano .env
+```
+
+Fill in the VPN section:
+```env
+WIREGUARD_PRIVATE_KEY=your_private_key_here
+WIREGUARD_ADDRESSES=10.x.x.x/32
+WIREGUARD_PUBLIC_KEY=server_public_key_here
+WIREGUARD_ENDPOINT_IP=x.x.x.x  # IP address, not hostname
+WIREGUARD_ENDPOINT_PORT=51820
+```
+
+Then:
 ```bash
 docker compose up -d
 ```
 
-### 5. Access Bisq
-Open your browser and navigate to:
-```
-http://localhost:6080
-```
-- **Password**: `bisqvnc` (default)
-
-## 📖 Detailed Setup
-
-### Configuration Options
-
-#### Environment Variables (.env file)
-```bash
-# VNC Configuration
-VNC_PASSWORD=bisqvnc
-VNC_RESOLUTION=1280x720
-
-# Bisq Configuration
-BISQ_NETWORK=BTC_MAINNET  # or BTC_TESTNET
-
-# Timezone
-TZ=UTC
-```
-
-#### Advanced VPN Settings
-The Gluetun container supports extensive VPN configuration:
-
-```yaml
-environment:
-  # DNS Configuration
-  - DOT=on                        # DNS over TLS
-  - DOT_PROVIDERS=cloudflare      # DNS provider
-  - BLOCK_MALICIOUS=on            # Block malicious domains
-  - BLOCK_ADS=off                 # Ad blocking (optional)
-  
-  # Security
-  - KILL_SWITCH=on                # Block all traffic if VPN drops
-  - FIREWALL_INPUT_PORTS=6080,5901  # Allow VNC access
-```
-
-### Building from Source
-
-If you need to customize the Bisq container:
+### Step 4: Did It Work?
 
 ```bash
-# Build with custom modifications
-docker compose build --no-cache bisq
+# Check if containers are alive
+docker ps
 
-# Build with specific Bisq version
-sed -i 's/ENV BISQ_VERSION=.*/ENV BISQ_VERSION=1.9.22/' docker/bisq/Dockerfile
-docker compose build bisq
+# VPN people can test their IP
+docker exec gluetun wget -qO- https://ipinfo.io/ip
+
+# Watch Bisq wake up
+docker logs bisq --tail 20
 ```
 
-## 💻 Usage
+### Step 5: Use The Thing
 
-### Management Commands
+Open **http://localhost:6080** and wait for Bisq to finish loading. It takes a minute because Java.
 
-The project includes a comprehensive management script:
+## What's In Here
+
+```
+bisq-vpn-docker/
+├── docker-compose.yml          # VPN version
+├── docker-compose.novpn.yml    # Normal version (use this one)
+├── .env.example                # Configuration template
+├── scripts/                    # Useful scripts
+├── docker/bisq/                # Container build files
+├── volumes/                    # Your important data lives here
+└── security/                   # Security configs
+```
+
+**Critical**: `volumes/bisq-data/` contains your wallet. Back this up or cry later.
+
+## Day-to-Day Operations
+
+I made a script because typing Docker commands gets old:
 
 ```bash
-# Start all services
+# Start everything
 ./scripts/start-bisq-vpn.sh start
 
-# Check status
+# Check if it's working
 ./scripts/start-bisq-vpn.sh status
 
-# View logs
+# Read the logs
 ./scripts/start-bisq-vpn.sh logs
 
-# Test VPN connection
+# Test VPN (if using)
 ./scripts/start-bisq-vpn.sh test
 
-# Stop all services
+# Stop everything
 ./scripts/start-bisq-vpn.sh stop
 
-# Rebuild containers
+# Rebuild when things break
 ./scripts/start-bisq-vpn.sh build
+```
 
-# Clean everything (including data)
-./scripts/start-bisq-vpn.sh clean
+Or do it manually like a champion:
+
+```bash
+# Check VPN IP
+docker exec gluetun wget -qO- https://ipinfo.io/ip
+
+# Get a shell in the container
+docker exec -it bisq bash
+
+# Force window to fill screen
+docker exec bisq bash -c 'DISPLAY=:1 wmctrl -r "Bisq" -b add,fullscreen'
+
+# Watch resource usage
+docker stats bisq
 ```
 
 ### Updating Bisq
-
-Use the automated update script:
 
 ```bash
 ./scripts/update-bisq.sh
 ```
 
-This script will:
-1. Check for the latest Bisq version
-2. Backup your current data
-3. Update and rebuild the container
-4. Restart with the new version
+This script checks for new versions, backs up your data, and rebuilds everything. Because automation is better than remembering.
 
-### Manual Operations
+## How This Actually Works
 
-```bash
-# Check VPN IP address
-docker exec gluetun wget -qO- https://ipinfo.io/ip
-
-# Access Bisq container shell
-docker exec -it bisq bash
-
-# Check Bisq logs
-docker exec bisq cat /var/log/supervisor/bisq.log
-
-# Manually trigger window resize
-docker exec bisq bash -c 'DISPLAY=:1 wmctrl -r "Bisq" -b add,fullscreen'
+### Direct Connection Flow
+```
+Your Browser → noVNC → VNC → Desktop → Bisq → Internet
+                                  ↓
+                                Tor (for P2P)
 ```
 
-## 🏗️ Architecture
-
-### Container Structure
-
-```mermaid
-graph TB
-    Browser[Web Browser] -->|Port 6080| noVNC[noVNC Server]
-    noVNC --> VNC[TigerVNC Server]
-    VNC --> XFCE[XFCE Desktop]
-    XFCE --> Bisq[Bisq Application]
-    Bisq --> Gluetun[Gluetun VPN]
-    Gluetun --> VPN[WireGuard VPN]
-    VPN --> Internet[Internet]
-    Bisq --> Tor[Tor Network]
-    Tor --> P2P[Bisq P2P Network]
+### VPN Bypass Flow
+```
+Your Browser → noVNC → VNC → Desktop → Bisq → VPN → Internet
+                                          ↓
+                                        Tor (for P2P)
 ```
 
-### Network Flow
+Either way, your actual trading goes through Tor. The VPN just helps you reach the internet when your ISP is being annoying.
 
-1. **Bisq Container** uses Gluetun's network stack (`network_mode: "service:gluetun"`)
-2. **All traffic** from Bisq routes through the VPN tunnel
-3. **Kill switch** prevents any traffic leaks if VPN disconnects
-4. **Tor traffic** for Bisq P2P connectivity is allowed through the VPN
+## Configuration Reference
 
-### Process Management
+### Basic Settings (.env file)
 
-Supervisord manages all processes with proper startup order:
+| Setting | Default | What It Does |
+|---------|---------|--------------|
+| `BISQ_VERSION` | `1.9.21` | Which Bisq version to install |
+| `VNC_PASSWORD` | `bisqvnc` | Password for the web interface |
+| `TZ` | `America/Sao_Paulo` | Container timezone |
+| `PUID` | `1000` | File ownership stuff |
+| `PGID` | `1000` | More file ownership stuff |
 
-```
-1. VNC Server (Xtigervnc)
-   ↓
-2. Desktop Environment (XFCE)
-   ↓
-3. Clipboard Tools (vncconfig, autocutsel)
-   ↓
-4. Web Server (noVNC)
-   ↓
-5. Bisq Application
-   ↓
-6. Resize Monitor (auto-resize daemon)
-```
+### VPN Settings (Skip If Direct)
 
-## 📁 Project Structure
+| Setting | Required | What It Does |
+|---------|----------|--------------|
+| `WIREGUARD_PRIVATE_KEY` | Yes | Your WireGuard private key |
+| `WIREGUARD_ADDRESSES` | Yes | Your VPN IP (IPv4 only) |
+| `WIREGUARD_PUBLIC_KEY` | Yes | Server's public key |
+| `WIREGUARD_ENDPOINT_IP` | Yes | Server IP (must be IP, not domain) |
+| `WIREGUARD_ENDPOINT_PORT` | Yes | Server port |
 
-```
-bisq-vpn-container/
-├── config/
-│   └── wireguard.conf          # VPN configuration (user-provided)
-├── scripts/
-│   ├── start-bisq-vpn.sh       # Main management script
-│   ├── test-vpn.sh             # VPN connection tester
-│   └── update-bisq.sh          # Bisq version updater
-├── volumes/                    # Persistent data (auto-created)
-│   ├── bisq-data/              # Wallet, trades, Tor hidden service
-│   ├── bisq-config/            # Application settings
-│   └── gluetun/                # VPN state cache
-├── docker-compose.yml          # Container orchestration
-├── docker/                     # Docker-related files
-│   └── bisq/                   # Bisq container files
-│       ├── Dockerfile          # Bisq container definition
-│       └── config/             # Container configurations
-│           ├── supervisord.conf    # Process manager configuration
-│           ├── monitor-resize.sh   # Window resize daemon
-│           └── novnc-index.html    # Custom noVNC interface
-└── README.md                   # This file
-```
+### Ports
 
-## 🔒 Security Considerations
+| Port | What | Access |
+|------|------|--------|
+| `6080` | Web interface | http://localhost:6080 |
+| `5901` | Direct VNC | VNC client to localhost:5901 |
+| `8000` | Health check | VPN setups only |
 
-### Data Protection
-- **Wallet Backup**: Always backup `volumes/bisq-data/` - it contains your wallet and funds
-- **VPN Kill Switch**: Enabled by default to prevent IP leaks
-- **Container Isolation**: Bisq runs in an isolated environment
-- **No Root Access**: Bisq runs as non-root user inside container
+## Security Notes
+
+### Data Safety
+- **Back up `volumes/bisq-data/`** — Your wallet lives here
+- Containers run as non-root
+- Temporary filesystems for scratch space
+- Resource limits prevent container abuse
 
 ### Network Security
-- **VPN-Only Access**: Bisq cannot access internet without VPN
-- **DNS over TLS**: Encrypted DNS queries prevent DNS leaks
-- **Tor Integration**: P2P traffic uses Tor for additional privacy
-- **Firewall Rules**: Strict firewall configuration in Gluetun
+- **Direct**: Standard Docker networking + Tor for P2P
+- **VPN**: Everything routed through VPN + Tor for P2P
+- Kill switch prevents IP leaks if VPN fails
 
-### Best Practices
-1. **Regular Backups**: Backup the `volumes/` directory regularly
-2. **Secure VNC Password**: Change default password in production
-3. **Local Access Only**: Don't expose ports 6080/5901 to internet
-4. **Update Regularly**: Keep Bisq and containers updated
+## When Things Break
 
-## 🛠️ Troubleshooting
+### VPN Won't Connect
 
-### VPN Connection Issues
-
-**Problem**: VPN not connecting
 ```bash
-# Check Gluetun logs
+# Check what's wrong
 docker logs gluetun
 
-# Verify endpoint is reachable
-docker exec gluetun ping -c 3 <endpoint_ip>
-
-# Check DNS resolution
-docker exec gluetun nslookup google.com
+# Test basic connectivity
+docker exec gluetun ping -c 3 8.8.8.8
 ```
 
-**Solution**: 
-- Verify WireGuard configuration is correct
-- Ensure endpoint IP (not hostname) is used
+Common fixes:
+- Make sure `WIREGUARD_ENDPOINT_IP` is an actual IP address
 - Check if your VPN subscription is active
+- Some VPN providers block Docker traffic (switch servers)
 
-### Bisq Access Issues
+### Web Interface Dead
 
-**Problem**: Cannot access web interface
 ```bash
-# Check if containers are running
+# Container status
 docker ps
 
-# Verify ports are not in use
-sudo netstat -tulpn | grep -E '6080|5901'
+# Port conflicts
+sudo netstat -tulpn | grep 6080
 
-# Check noVNC logs
-docker logs bisq
+# noVNC logs
+docker logs bisq | grep -i novnc
 ```
 
-**Solution**:
-- Ensure no other service is using ports 6080/5901
-- Wait 30-60 seconds for services to fully start
-- Try accessing via VNC client on port 5901
+Usually just need to wait longer for startup, or something else grabbed port 6080.
 
-### Display Issues
+### Window Size Issues
 
-**Problem**: Bisq window not resizing with browser
 ```bash
-# Check resize monitor is running
+# Check resize monitor
 docker exec bisq ps aux | grep monitor-resize
 
-# View resize monitor logs
-docker exec bisq cat /var/log/supervisor/resize-monitor.log
-
-# Manually trigger fullscreen
+# Force fullscreen
 docker exec bisq bash -c 'DISPLAY=:1 wmctrl -r "Bisq" -b add,fullscreen'
 ```
 
-### Clipboard Not Working
+### Copy/Paste Broken
 
-**Problem**: Cannot copy/paste between host and container
 ```bash
 # Check clipboard tools
 docker exec bisq ps aux | grep -E "vncconfig|autocutsel"
 
-# Restart clipboard services
+# Restart them
 docker exec bisq bash -c 'DISPLAY=:1 vncconfig -nowin &'
 docker exec bisq bash -c 'DISPLAY=:1 autocutsel -fork'
 ```
 
-## 🚧 Advanced Configuration
+### Performance Sucks
 
-### Custom Bisq Arguments
-
-Modify `start-bisq.sh` in the Dockerfile to add Bisq arguments:
 ```bash
-/opt/bisq/bin/Bisq \
-  --baseCurrencyNetwork=BTC_MAINNET \
-  --daoActivated=true \
-  --maxConnections=12
-```
+# Check resource usage
+docker stats bisq
 
-### Multiple VPN Providers
-
-To use different VPN providers, modify the Gluetun environment:
-```yaml
-environment:
-  - VPN_SERVICE_PROVIDER=mullvad  # or nordvpn, expressvpn, etc.
-  - VPN_TYPE=wireguard
-  # Provider-specific settings...
-```
-
-### Resource Limits
-
-Add resource constraints in `docker-compose.yml`:
-```yaml
-services:
-  bisq:
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-        reservations:
-          memory: 2G
-```
-
-## 📊 Performance Optimization
-
-### Recommended Settings
-
-For optimal performance:
-```yaml
-# docker-compose.yml
-environment:
-  - VNC_RESOLUTION=1920x1080     # Higher resolution
-  - BISQ_MAX_MEMORY=2048m        # More memory for Bisq
-  - WIREGUARD_MTU=1420           # Optimal MTU for WireGuard
-```
-
-### Monitoring
-
-Monitor resource usage:
-```bash
-# Container stats
-docker stats bisq gluetun
-
-# VPN performance
-docker exec gluetun curl -s https://fast.com
-
-# Bisq memory usage
+# See Java memory usage
 docker exec bisq ps aux | grep java
 ```
 
-## 🤝 Contributing
+Edit the compose file to give it more RAM if needed.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Customization
 
-### Development Setup
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Custom Bisq Arguments
 
-### Testing Changes
+Edit `docker/bisq/config/start-bisq.sh`:
 ```bash
-# Test build
-docker compose build --no-cache bisq
-
-# Run tests
-./scripts/test-vpn.sh
-
-# Validate functionality
-docker compose up -d
-curl http://localhost:6080
+/opt/bisq/bin/Bisq \
+  --baseCurrencyNetwork=BTC_MAINNET \
+  --maxConnections=12 \
+  --nodePort=9999
 ```
 
-## 📄 License
+### More Resources
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Edit your compose file:
+```yaml
+deploy:
+  resources:
+    limits:
+      cpus: '6.0'
+      memory: 8G
+```
 
-## 🙏 Acknowledgments
+### Different VPN Providers
 
-- [Bisq](https://bisq.network/) - The decentralized Bitcoin exchange
-- [Gluetun](https://github.com/qdm12/gluetun) - VPN client in Docker
-- [TigerVNC](https://tigervnc.org/) - High-performance VNC implementation
-- [noVNC](https://novnc.com/) - HTML5 VNC client
+Edit `.env`:
+```env
+VPN_SERVICE_PROVIDER=mullvad  # or whatever
+VPN_TYPE=wireguard
+```
 
-## 📞 Support
+Check [Gluetun docs](https://github.com/qdm12/gluetun) for provider-specific settings.
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/bisq-vpn-container/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/bisq-vpn-container/discussions)
-- **Bisq Support**: [Bisq Documentation](https://bisq.wiki/)
+## Contributing
 
-## ⚠️ Disclaimer
+Found a bug? Have an idea? Cool.
 
-This software is provided "as is" without warranty of any kind. Always backup your Bisq data before making changes. The authors are not responsible for any loss of funds or data.
+1. Fork it
+2. Make a branch
+3. Fix/add stuff
+4. Open a PR
+
+### Testing
+
+```bash
+# Test both modes
+docker compose -f docker-compose.novpn.yml up -d  # Direct
+docker compose up -d                              # VPN
+```
+
+## License
+
+MIT — Do whatever you want with this.
+
+## Credits
+
+- [Bisq](https://bisq.network/) — The actual Bitcoin exchange
+- [Gluetun](https://github.com/qdm12/gluetun) — VPN container magic
+- [TigerVNC](https://tigervnc.org/) — VNC server that doesn't suck
+- [noVNC](https://novnc.com/) — Browser-based VNC client
+
+## Disclaimer
+
+This works on my machine. It might work on yours. No guarantees about anything. Back up your wallet. Don't blame me if you lose money.
 
 ---
 
-<p align="center">Made with ❤️ for the Bisq community</p>
+<p align="center">
+<strong>Built by someone who got tired of installing the same app everywhere</strong><br>
+<a href="https://github.com/emsilva/bisq-vpn-docker/issues">Report Issues</a> • 
+<a href="https://github.com/emsilva/bisq-vpn-docker/discussions">Start Discussions</a> • 
+<a href="https://bisq.wiki/">Bisq Docs</a>
+</p>

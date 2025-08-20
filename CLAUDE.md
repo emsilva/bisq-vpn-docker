@@ -80,7 +80,7 @@ docker exec bisq bash -c 'DISPLAY=:1 wmctrl -l -G | grep -i bisq'
 ## Critical Configuration Details
 
 ### WireGuard VPN Configuration
-- Configuration expected in `docker/gluetun/config/wireguard.conf`
+- Configuration provided via environment variables in .env file
 - Endpoint IP must be resolved to IP address (not hostname) in docker-compose.yml
 - IPv6 addresses must be removed from WIREGUARD_ADDRESSES
 - Kill switch enabled by default
