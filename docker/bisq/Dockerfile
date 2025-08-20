@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # VNC server
     tigervnc-standalone-server \
     tigervnc-common \
+    tigervnc-tools \
     # noVNC for web access
     novnc \
     python3-websockify \
