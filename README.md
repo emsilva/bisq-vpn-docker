@@ -403,6 +403,7 @@ MIT — Do whatever you want with this.
 - [Gluetun](https://github.com/qdm12/gluetun) — VPN container magic
 - [TigerVNC](https://tigervnc.org/) — VNC server that doesn't suck
 - [noVNC](https://novnc.com/) — Browser-based VNC client
+- [LinuxServer.io](https://linuxserver.io) — Borrowed their s6-overlay approach, standardized base images, and `/config` volume patterns (because why reinvent working stuff?)
 
 ## Disclaimer
 
