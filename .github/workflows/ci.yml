@@ -38,6 +38,7 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -101,6 +102,7 @@ jobs:
       - name: Upload Hadolint scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true
         with:
           sarif_file: hadolint-results.sarif
 
@@ -191,6 +193,7 @@ jobs:
       - name: Upload Trivy image scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true
         with:
           sarif_file: 'trivy-image-results.sarif'
 
