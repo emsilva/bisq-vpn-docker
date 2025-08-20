@@ -138,7 +138,7 @@ show_logs() {
     echo "1) Gluetun (VPN)"
     echo "2) Bisq"
     echo "3) Both"
-    read -p "Choice: " choice
+    read -rp "Choice: " choice
     
     case $choice in
         1)
@@ -175,7 +175,7 @@ build_containers() {
 # Function to clean everything
 clean_all() {
     echo -e "${RED}Warning: This will remove all containers and volumes!${NC}"
-    read -p "Are you sure? (y/N): " confirm
+    read -rp "Are you sure? (y/N): " confirm
     
     if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
         echo "Stopping and removing containers..."

@@ -231,15 +231,17 @@ jobs:
 
       - name: Check environment variables
         run: |
-          # Check if all required variables are documented in .env.example
-          grep -E "^[A-Z_]+" .env.example | cut -d'=' -f1 | sort > env-example-vars.txt
-          grep -E "\$\{[A-Z_]+[:-]" docker-compose.yml | sed -E 's/.*\$\{([A-Z_]+)[:-].*/\1/' | sort | uniq > compose-vars.txt
+          # Extract variables from docker-compose.yml (both main and novpn)
+          grep -o '\${[^}]*}' docker-compose.yml docker-compose.novpn.yml | sed 's/.*\${//' | sed 's/}//' | sed 's/:.*//' | sort | uniq > compose-vars.txt
+          
+          # Extract variables from .env.example (application section only)
+          grep -E "^(BISQ_VERSION|VNC_PASSWORD|TZ|PUID|PGID)=" .env.example | cut -d'=' -f1 | sort > env-example-vars.txt
           
           if ! diff -q env-example-vars.txt compose-vars.txt > /dev/null 2>&1; then
-            echo "❌ Environment variable mismatch between .env.example and docker-compose.yml"
-            echo "Variables in .env.example:"
+            echo "❌ Environment variable mismatch between .env.example and docker-compose files"
+            echo "Variables in .env.example (application section):"
             cat env-example-vars.txt
-            echo "Variables in docker-compose.yml:"
+            echo "Variables in docker-compose files:"
             cat compose-vars.txt
             exit 1
           fi

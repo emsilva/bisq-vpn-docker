@@ -10,8 +10,11 @@
 # =============================================================================
 FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS downloader
 
+# Set shell to bash with pipefail option  
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install only download dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     aria2=1.36.0-1 \
     curl=7.81.0-1ubuntu1.18 \
     ca-certificates=20230311ubuntu0.22.04.1 \
@@ -84,8 +87,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Sao_Paulo
 ENV BISQ_VERSION=${BISQ_VERSION}
 
+# Set shell to bash with pipefail option  
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install only runtime dependencies (smaller footprint)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     # Desktop environment
     xfce4=4.16 \
     xfce4-terminal=0.8.10-1ubuntu1 \

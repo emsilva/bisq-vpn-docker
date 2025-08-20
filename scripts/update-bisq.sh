@@ -39,9 +39,12 @@ validate_version_format() {
     fi
     
     # Check for reasonable version ranges
-    local major=$(echo "$version" | cut -d'.' -f1)
-    local minor=$(echo "$version" | cut -d'.' -f2)
-    local patch=$(echo "$version" | cut -d'.' -f3)
+    local major
+    local minor  
+    local patch
+    major=$(echo "$version" | cut -d'.' -f1)
+    minor=$(echo "$version" | cut -d'.' -f2)
+    patch=$(echo "$version" | cut -d'.' -f3)
     
     if [ "$major" -lt 1 ] || [ "$major" -gt 10 ]; then
         echo -e "${RED}Error: Major version $major seems unreasonable${NC}"
@@ -77,9 +80,7 @@ check_version_exists() {
 # Function to update version in Dockerfile
 update_dockerfile() {
     local new_version=$1
-    sed -i "s/ENV BISQ_VERSION=.*/ENV BISQ_VERSION=${new_version}/" docker/bisq/Dockerfile
-    
-    if [ $? -eq 0 ]; then
+    if sed -i "s/ENV BISQ_VERSION=.*/ENV BISQ_VERSION=${new_version}/" docker/bisq/Dockerfile; then
         echo -e "${GREEN}✓${NC} Dockerfile updated to version ${new_version}"
         return 0
     else
@@ -90,7 +91,8 @@ update_dockerfile() {
 
 # Function to backup current data
 backup_data() {
-    local backup_dir="backups/$(date +%Y%m%d_%H%M%S)"
+    local backup_dir
+    backup_dir="backups/$(date +%Y%m%d_%H%M%S)"
     echo -e "${BLUE}Creating backup...${NC}"
     
     mkdir -p "$backup_dir"
@@ -111,9 +113,12 @@ show_version_info() {
     echo -e "${BLUE}Fetching release notes for v${version}...${NC}"
     echo ""
     
-    local release_info=$(curl -s "https://api.github.com/repos/bisq-network/bisq/releases/tags/v${version}")
-    local release_date=$(echo "$release_info" | grep '"published_at":' | cut -d'"' -f4 | cut -d'T' -f1)
-    local release_name=$(echo "$release_info" | grep '"name":' | head -1 | cut -d'"' -f4)
+    local release_info
+    local release_date
+    local release_name
+    release_info=$(curl -s "https://api.github.com/repos/bisq-network/bisq/releases/tags/v${version}")
+    release_date=$(echo "$release_info" | grep '"published_at":' | cut -d'"' -f4 | cut -d'T' -f1)
+    release_name=$(echo "$release_info" | grep '"name":' | head -1 | cut -d'"' -f4)
     
     echo -e "${CYAN}Release:${NC} $release_name"
     echo -e "${CYAN}Date:${NC} $release_date"
@@ -141,16 +146,12 @@ rebuild_containers() {
     
     # Build new image
     echo "Building new Bisq image..."
-    docker compose build --no-cache bisq
-    
-    if [ $? -eq 0 ]; then
+    if docker compose build --no-cache bisq; then
         echo -e "${GREEN}✓${NC} Build successful"
         
         # Start containers
         echo "Starting containers..."
-        docker compose up -d
-        
-        if [ $? -eq 0 ]; then
+        if docker compose up -d; then
             echo -e "${GREEN}✓${NC} Containers started"
             echo ""
             echo -e "${GREEN}Success! Bisq has been updated and restarted.${NC}"
@@ -197,7 +198,7 @@ if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
     echo "2) Exit"
     
     while true; do
-        read -p "Choice [1-2]: " choice
+        read -rp "Choice [1-2]: " choice
         case $choice in
             1)
                 rebuild_containers
@@ -227,7 +228,7 @@ else
     echo "3) Skip update"
     
     while true; do
-        read -p "Choice [1-3]: " choice
+        read -rp "Choice [1-3]: " choice
         case $choice in
             1)
                 # Update to latest
@@ -237,7 +238,7 @@ else
             2)
             # Custom version with validation
             while true; do
-                read -p "Enter version (e.g., 1.9.21): " TARGET_VERSION
+                read -rp "Enter version (e.g., 1.9.21): " TARGET_VERSION
                 
                 # Validate input is not empty
                 if [ -z "$TARGET_VERSION" ]; then
@@ -283,7 +284,7 @@ else
     echo "3) Cancel"
     
     while true; do
-        read -p "Choice [1-3]: " backup_choice
+        read -rp "Choice [1-3]: " backup_choice
         case $backup_choice in
             1)
                 backup_data
@@ -305,14 +306,10 @@ else
     
     # Update Dockerfile
     echo ""
-    update_dockerfile "$TARGET_VERSION"
-    
-    if [ $? -eq 0 ]; then
+    if update_dockerfile "$TARGET_VERSION"; then
         # Rebuild containers
         echo ""
-        rebuild_containers
-        
-        if [ $? -eq 0 ]; then
+        if rebuild_containers; then
             echo ""
             echo "========================================="
             echo -e "${GREEN}✓ Update Complete!${NC}"

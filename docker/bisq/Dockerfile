@@ -28,8 +28,11 @@ LABEL bisq.version="${BISQ_VERSION:-1.9.21}" \
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Sao_Paulo
 
-# Install dependencies (using latest available versions)
-RUN apt-get update && apt-get install -y \
+# Set shell to bash with pipefail option  
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     # Desktop environment
     xfce4 \
     xfce4-terminal \
@@ -129,20 +132,18 @@ RUN mkdir -p /home/bisq/.vnc \
     /var/log/supervisor \
     /var/run
 
-# VNC configuration
-RUN echo "bisqvnc" | vncpasswd -f > /home/bisq/.vnc/passwd && \
-    chmod 600 /home/bisq/.vnc/passwd
-
-# Copy and set up xstartup script
-COPY config/xstartup.sh /home/bisq/.vnc/xstartup
-RUN chmod +x /home/bisq/.vnc/xstartup
-
 # Copy configuration files and scripts
+COPY config/xstartup.sh /home/bisq/.vnc/xstartup
 COPY config/monitor-resize.sh /home/bisq/monitor-resize.sh
 COPY config/start-bisq.sh /home/bisq/start-bisq.sh
 COPY config/start-vnc.sh /home/bisq/start-vnc.sh
 COPY config/disable-screensaver.sh /home/bisq/disable-screensaver.sh
-RUN chmod +x /home/bisq/monitor-resize.sh /home/bisq/start-bisq.sh /home/bisq/start-vnc.sh /home/bisq/disable-screensaver.sh
+
+# Set up VNC and script permissions
+RUN echo "bisqvnc" | vncpasswd -f > /home/bisq/.vnc/passwd && \
+    chmod 600 /home/bisq/.vnc/passwd && \
+    chmod +x /home/bisq/.vnc/xstartup && \
+    chmod +x /home/bisq/monitor-resize.sh /home/bisq/start-bisq.sh /home/bisq/start-vnc.sh /home/bisq/disable-screensaver.sh
 
 # Copy s6-overlay configuration
 COPY config/s6-overlay/ /etc/s6-overlay/
@@ -153,11 +154,9 @@ RUN mkdir -p /home/bisq/.config/xfce4/xfconf/xfce-perchannel-xml
 COPY config/xfce4-screensaver.xml /home/bisq/.config/xfce4/xfconf/xfce-perchannel-xml/
 COPY config/xfce4-power-manager.xml /home/bisq/.config/xfce4/xfconf/xfce-perchannel-xml/
 
-# Prevent xfce4-screensaver from starting
-RUN /home/bisq/disable-screensaver.sh
-
-# Fix permissions
-RUN chown -R bisq:bisq /home/bisq
+# Final setup and permissions
+RUN /home/bisq/disable-screensaver.sh && \
+    chown -R bisq:bisq /home/bisq
 
 # Expose ports (these will be accessed through gluetun network)
 EXPOSE 5901 6080

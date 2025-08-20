@@ -3,7 +3,7 @@
 # =============================================================================
 # Common development and deployment tasks
 
-.PHONY: help build up down logs clean test lint security-scan setup-secrets
+.PHONY: help build up down logs clean test lint security-scan
 
 # Default target
 help: ## Show this help message
@@ -63,12 +63,8 @@ security-scan: ## Run security scans
 # SECRETS MANAGEMENT
 # =============================================================================
 
-setup-secrets: ## Setup VPN secrets (interactive)
-	@echo "Setting up VPN secrets..."
-	./scripts/setup-secrets.sh
-
-secrets-compose: ## Start with secrets-enabled compose
-	docker compose -f docker-compose.yml -f docker-compose.secrets.yml up -d
+# VPN secrets are now managed via .env environment variables
+# Use docker-compose.novpn.yml for direct connection or regular docker-compose.yml with .env for VPN
 
 # =============================================================================
 # UTILITY COMMANDS
@@ -92,11 +88,11 @@ prod-build: ## Build for production with multi-stage Dockerfile
 
 prod-up: ## Start production containers with secrets
 	@echo "Starting production containers..."
-	@if [ ! -f secrets/wireguard_private_key.txt ]; then \
-		echo "❌ Secrets not found. Run 'make setup-secrets' first."; \
+	@if [ ! -f .env ]; then \
+		echo "❌ Environment file not found. Copy .env.example to .env first."; \
 		exit 1; \
 	fi
-	docker compose -f docker-compose.yml -f docker-compose.secrets.yml up -d
+	docker compose up -d
 
 # =============================================================================
 # MAINTENANCE
