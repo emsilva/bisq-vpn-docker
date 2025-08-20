@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# Pin to specific Ubuntu 22.04 LTS digest for reproducibility
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da
+# Pin to specific Ubuntu 24.04 LTS digest for reproducibility
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9
 
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \
@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.title="Bisq VPN Container" \
       org.opencontainers.image.vendor="Open Source" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.created="2025-01-19T00:00:00Z" \
-      org.opencontainers.image.base.name="ubuntu:22.04" \
+      org.opencontainers.image.base.name="ubuntu:24.04" \
       maintainer="bisq-vpn-docker"
 
 # Additional custom labels
@@ -78,9 +78,9 @@ RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.ta
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.tar.xz
 
-# Create user for running Bisq with explicit UID/GID 1000
-RUN groupadd -g 1000 bisq && \
-    useradd -m -u 1000 -g 1000 -s /bin/bash bisq && \
+# Create user for running Bisq with explicit UID/GID 1001
+RUN groupadd -g 1001 bisq && \
+    useradd -m -u 1001 -g 1001 -s /bin/bash bisq && \
     echo "bisq:bisq" | chpasswd && \
     usermod -aG sudo bisq && \
     echo "bisq ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers

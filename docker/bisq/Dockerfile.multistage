@@ -8,7 +8,7 @@
 # =============================================================================
 # STAGE 1: DOWNLOAD AND PREPARE BISQ
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS downloader
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS downloader
 
 # Set shell to bash with pipefail option  
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -17,7 +17,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && apt-get install -y --no-install-recommends \
     aria2=1.36.0-1 \
     curl=7.81.0-1ubuntu1.18 \
-    ca-certificates=20230311ubuntu0.22.04.1 \
+    ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/cache \
 # =============================================================================
 # STAGE 2: S6-OVERLAY PREPARATION
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS s6-overlay
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS s6-overlay
 
 # Install s6-overlay
 ARG S6_OVERLAY_VERSION=3.2.1.0
@@ -57,7 +57,7 @@ RUN mkdir -p /s6-overlay && tar -C /s6-overlay -Jxpf /tmp/s6-overlay-x86_64.tar.
 # =============================================================================
 # STAGE 3: FINAL RUNTIME IMAGE
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS runtime
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runtime
 
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \
@@ -70,7 +70,7 @@ LABEL org.opencontainers.image.title="Bisq VPN Container" \
       org.opencontainers.image.vendor="Open Source" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.created="2025-01-19T00:00:00Z" \
-      org.opencontainers.image.base.name="ubuntu:22.04" \
+      org.opencontainers.image.base.name="ubuntu:24.04" \
       maintainer="bisq-vpn-docker"
 
 # Additional custom labels
@@ -103,7 +103,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     novnc=1:1.2.0-2 \
     websockify=0.9.0-2 \
     # Java runtime for Bisq (pin to LTS version)
-    openjdk-11-jre=11.0.24+8-1ubuntu3~22.04 \
+    openjdk-11-jre \
     # Essential utilities only
     sudo=1.9.9-1ubuntu2.4 \
     # Window management for fullscreen
@@ -119,9 +119,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy s6-overlay from preparation stage
 COPY --from=s6-overlay /s6-overlay/ /
 
-# Create user for running Bisq with explicit UID/GID 1000
-RUN groupadd -g 1000 bisq && \
-    useradd -m -u 1000 -g 1000 -s /bin/bash bisq && \
+# Create user for running Bisq with explicit UID/GID 1001
+RUN groupadd -g 1001 bisq && \
+    useradd -m -u 1001 -g 1001 -s /bin/bash bisq && \
     echo "bisq:bisq" | chpasswd && \
     usermod -aG sudo bisq && \
     echo "bisq ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
