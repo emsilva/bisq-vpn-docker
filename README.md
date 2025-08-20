@@ -33,7 +33,7 @@ Look, I got tired of installing Bisq on every machine I use. So I containerized 
 
 ### About That VPN Thing
 
-Real talk: **VPN is NOT for privacy**. Tor already handles that perfectly fine.
+Real talk: **in the Bisq context, VPN is NOT for privacy**. Tor already handles that perfectly fine.
 
 The VPN option exists because some ISPs are jerks and block Tor connections. If your ISP does this annoying thing, route through a VPN first. Otherwise, skip it.
 
