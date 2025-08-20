@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Pin to specific Ubuntu 22.04 LTS digest for reproducibility
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9
 
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \

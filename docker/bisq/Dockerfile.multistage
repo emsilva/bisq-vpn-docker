@@ -8,7 +8,7 @@
 # =============================================================================
 # STAGE 1: DOWNLOAD AND PREPARE BISQ
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS downloader
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS downloader
 
 # Set shell to bash with pipefail option  
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/cache \
 # =============================================================================
 # STAGE 2: S6-OVERLAY PREPARATION
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS s6-overlay
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS s6-overlay
 
 # Install s6-overlay
 ARG S6_OVERLAY_VERSION=3.2.1.0
@@ -57,7 +57,7 @@ RUN mkdir -p /s6-overlay && tar -C /s6-overlay -Jxpf /tmp/s6-overlay-x86_64.tar.
 # =============================================================================
 # STAGE 3: FINAL RUNTIME IMAGE
 # =============================================================================
-FROM ubuntu:22.04@sha256:f9d633ff6640178c2d0525017174a688e2c1aef28f0a0130b26bd5554491f0da AS runtime
+FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runtime
 
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \
