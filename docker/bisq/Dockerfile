@@ -169,4 +169,5 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 # Use s6-overlay as init system
 # Note: Starting as root is intentional for s6-overlay process supervision
 # Individual services run as non-root user 'bisq' via s6 configuration
+# nosemgrep: dockerfile.security.missing-user.missing-user
 ENTRYPOINT ["/init"]
