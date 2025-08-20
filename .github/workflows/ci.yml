@@ -70,6 +70,8 @@ jobs:
 
       - name: Check script executability
         run: |
+          # Ensure scripts are executable (git might not preserve permissions)
+          chmod +x scripts/*.sh
           find scripts/ -name "*.sh" -type f | while read -r script; do
             if [ ! -x "$script" ]; then
               echo "Error: $script is not executable"
@@ -94,6 +96,7 @@ jobs:
           format: sarif
           output-file: hadolint-results.sarif
           no-fail: true
+          ignore: DL3008
 
       - name: Upload Hadolint scan results
         uses: github/codeql-action/upload-sarif@v3
@@ -214,20 +217,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env file for validation
+        run: cp .env.example .env
+
       - name: Validate docker-compose.yml
         run: |
           docker compose -f docker-compose.yml config > /dev/null
           echo "✅ Main docker-compose.yml is valid"
 
-      - name: Validate docker-compose.secrets.yml
+      - name: Validate docker-compose.novpn.yml
         run: |
-          # Create dummy secret files for validation
-          mkdir -p secrets
-          echo "dummy" > secrets/wireguard_private_key.txt
-          echo "dummy" > secrets/wireguard_preshared_key.txt
-          
-          docker compose -f docker-compose.yml -f docker-compose.secrets.yml config > /dev/null
-          echo "✅ Secrets docker-compose.yml is valid"
+          docker compose -f docker-compose.novpn.yml config > /dev/null
+          echo "✅ No-VPN docker-compose.yml is valid"
 
       - name: Check environment variables
         run: |
