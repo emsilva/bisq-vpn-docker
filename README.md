@@ -44,23 +44,35 @@ Your P2P trades still go through Tor either way. VPN just gets you to the intern
 
 ## Quick Start (Actually Quick)
 
-### Option 1: Normal People Setup
+### Option 1: Super Quick Setup (30 seconds)
+
+No git required - just grab the compose file and run:
+
+```bash
+# Download compose file directly
+curl -o docker-compose.yml https://raw.githubusercontent.com/emsilva/bisq-vpn-docker/main/docker-compose.novpn.yml
+
+# Start it up (uses pre-built image)
+docker compose up -d
+```
+
+### Option 2: Full Setup (2 minutes)
 
 ```bash
 git clone https://github.com/emsilva/bisq-vpn-docker.git
 cd bisq-vpn-docker
 cp .env.example .env
-# Defaults are fine for most people
+# Edit .env if you want custom settings
 docker compose -f docker-compose.novpn.yml up -d
 ```
 
-### Option 2: My ISP Is A Pain Setup
+### Option 3: VPN Setup (ISP blocks Tor)
 
 ```bash
 git clone https://github.com/emsilva/bisq-vpn-docker.git
 cd bisq-vpn-docker
 cp .env.example .env
-# Edit .env with your VPN stuff
+vim .env  # Add your VPN settings
 docker compose up -d
 ```
 
@@ -71,6 +83,8 @@ Wait like 2 minutes for Bisq to actually start up (Java, am I right?).
 ## Prerequisites
 
 You need Docker. If you don't have Docker, get Docker. Version 20.10+ works.
+
+**⚡ Performance Note**: This setup now uses pre-built images from GitHub Container Registry. Setup time: **~30 seconds** vs **5+ minutes** for building locally.
 
 Resource-wise:
 - **4GB RAM minimum** (8GB if you don't hate yourself)
@@ -100,9 +114,9 @@ Most people should do this:
 
 ```bash
 # Edit .env if you want (defaults are fine)
-nano .env
+vim .env
 
-# Start it up
+# Start it up (now uses pre-built image - much faster!)
 docker compose -f docker-compose.novpn.yml up -d
 ```
 
@@ -120,7 +134,7 @@ PGID=1000                    # Your group ID
 If your ISP blocks Tor like some kind of authoritarian regime:
 
 ```bash
-nano .env
+vim .env
 ```
 
 Fill in the VPN section:
@@ -189,7 +203,10 @@ I made a script because typing Docker commands gets old:
 # Stop everything
 ./scripts/start-bisq-vpn.sh stop
 
-# Rebuild when things break
+# Pull latest pre-built image
+docker compose pull
+
+# Build from source (developers only)
 ./scripts/start-bisq-vpn.sh build
 ```
 
@@ -384,6 +401,41 @@ VPN_TYPE=wireguard
 
 Check [Gluetun docs](https://github.com/qdm12/gluetun) for provider-specific settings.
 
+## For Developers
+
+### Building from Source
+
+Want to modify the container or build locally? Create a `docker-compose.dev.yml`:
+
+```yaml
+services:
+  bisq:
+    build:
+      context: docker/bisq
+      dockerfile: Dockerfile
+      args:
+        - BISQ_VERSION=${BISQ_VERSION:-1.9.21}
+    # ... rest of config same as docker-compose.novpn.yml
+```
+
+Then:
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+### Testing Changes
+
+```bash
+# Test pre-built image
+docker compose -f docker-compose.novpn.yml up -d
+
+# Test local build
+docker compose -f docker-compose.dev.yml up -d --build
+
+# Test VPN setup
+docker compose up -d
+```
+
 ## Contributing
 
 Found a bug? Have an idea? Cool.
@@ -391,15 +443,8 @@ Found a bug? Have an idea? Cool.
 1. Fork it
 2. Make a branch
 3. Fix/add stuff
-4. Open a PR
-
-### Testing
-
-```bash
-# Test both modes
-docker compose -f docker-compose.novpn.yml up -d  # Direct
-docker compose up -d                              # VPN
-```
+4. Test with both pre-built and local builds
+5. Open a PR
 
 ## License
 

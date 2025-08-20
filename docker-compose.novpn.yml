@@ -14,11 +14,7 @@
 
 services:
   bisq:
-    build:
-      context: docker/bisq
-      dockerfile: Dockerfile
-      args:
-        - BISQ_VERSION=${BISQ_VERSION:-1.9.21}
+    image: ghcr.io/emsilva/bisq-vpn-docker:latest
     container_name: bisq
     ports:
       # Bisq noVNC web interface
