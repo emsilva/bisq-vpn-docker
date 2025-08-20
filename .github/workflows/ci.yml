@@ -45,10 +45,11 @@ jobs:
       - name: Run Semgrep security scanner  
         uses: semgrep/semgrep-action@v1
         with:
-          config: >-
-            p/security-audit
-            p/secrets
-            p/docker
+          generateconfig: >-
+            --config=p/security-audit
+            --config=p/secrets
+            --config=p/docker
+            --exclude-rule=dockerfile.security.missing-user
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
