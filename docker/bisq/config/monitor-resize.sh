@@ -10,10 +10,10 @@ export DISPLAY=:1
 LAST_RES=$(xrandr | grep "^VNC-0" | grep -oP '\d+x\d+(?=\+)')
 echo "Initial resolution: $LAST_RES"
 
-# Function to maximize Bisq window
+# Function to maximize Bisq window - optimized for smooth resizing
 maximize_bisq() {
-    # Wait a moment for the resolution change to settle
-    sleep 1
+    # Minimal delay for resolution change to settle
+    sleep 0.2
     
     # Get current screen dimensions
     SCREEN_INFO=$(xrandr | grep "^VNC-0" | head -1)
@@ -23,34 +23,31 @@ maximize_bisq() {
     
     echo "Screen dimensions: ${WIDTH}x${HEIGHT}"
     
-    # Find Bisq window with retry logic
+    # Find Bisq window with optimized retry logic
     BISQ_WIN=""
-    for attempt in {1..10}; do
+    for attempt in {1..5}; do
         BISQ_WIN=$(wmctrl -l | grep -i "bisq" | head -1 | awk '{print $1}')
         if [ -n "$BISQ_WIN" ]; then
-            echo "Found Bisq window: $BISQ_WIN (attempt $attempt)"
+            echo "Found Bisq window: $BISQ_WIN"
             break
         fi
-        echo "Waiting for Bisq window... (attempt $attempt/10)"
-        sleep 2
+        if [ $attempt -eq 1 ]; then
+            echo "Waiting for Bisq window..."
+        fi
+        sleep 1
     done
     
     if [ -n "$BISQ_WIN" ]; then
-        # Remove any existing window states first
-        wmctrl -i -r "$BISQ_WIN" -b remove,fullscreen,maximized_vert,maximized_horz
-        sleep 0.2
+        # Try direct geometry setting first (faster than fullscreen toggle)
+        wmctrl -i -r "$BISQ_WIN" -e 0,0,0,$WIDTH,$HEIGHT
+        sleep 0.1
         
-        # Use fullscreen mode - most reliable approach
+        # Fallback to fullscreen if geometry setting didn't work
         wmctrl -i -r "$BISQ_WIN" -b add,fullscreen
         
-        echo "Set Bisq window to fullscreen (${WIDTH}x${HEIGHT})"
-        
-        # Verify the change took effect
-        sleep 0.5
-        WINDOW_GEOM=$(wmctrl -l -G | grep "$BISQ_WIN")
-        echo "Window geometry after resize: $WINDOW_GEOM"
+        echo "Resized Bisq window to ${WIDTH}x${HEIGHT}"
     else
-        echo "Bisq window not found after 10 attempts"
+        echo "Bisq window not found"
     fi
 }
 
@@ -59,10 +56,10 @@ echo "Waiting for Bisq application to fully load..."
 sleep 15
 maximize_bisq
 
-# Monitor for resolution changes
+# Monitor for resolution changes with faster polling
 echo "Monitoring for resolution changes..."
 while true; do
-    sleep 2
+    sleep 0.5  # Much faster polling for responsive resizing
     
     # Get current resolution
     CURRENT_RES=$(xrandr | grep "^VNC-0" | grep -oP '\d+x\d+(?=\+)')
