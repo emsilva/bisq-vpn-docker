@@ -1,0 +1,6 @@
+# Semgrep ignore file
+# Suppress false positives for our Docker container architecture
+
+# Container starts as root for s6-overlay process supervision
+# Individual services run as non-root user 'bisq' via s6 configuration  
+dockerfile.security.missing-user.missing-user

@@ -42,11 +42,6 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      - name: Create Semgrep ignore file
-        run: |
-          echo "dockerfile.security.missing-user.missing-user" > .semgrepignore
-          echo "# s6-overlay requires root start, processes run as non-root user" >> .semgrepignore
-
       - name: Run Semgrep security scanner  
         uses: semgrep/semgrep-action@v1
         with:
