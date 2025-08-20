@@ -26,7 +26,7 @@ Look, I got tired of installing Bisq on every machine I use. So I containerized 
 
 - **Browser-based Bisq** — Access the full GUI from any modern browser
 - **Auto-resize magic** — Window actually follows your browser size (took way too long to get this right)
-- **Copy/paste works** — Because basic functionality shouldn't be hard
+- **Copy/paste via UI widget** — Click the tab thing on the left, use the clipboard box (browser security won't let us do it transparently)
 - **Your data persists** — Wallet and settings survive container restarts
 - **Easy updates** — One script, done
 - **Actually secure** — Containers, resource limits, the works
@@ -320,15 +320,23 @@ docker exec bisq ps aux | grep monitor-resize
 docker exec bisq bash -c 'DISPLAY=:1 wmctrl -r "Bisq" -b add,fullscreen'
 ```
 
-### Copy/Paste Broken
+### Copy/Paste Issues
 
+Real talk: Copy/paste isn't broken, it just doesn't work how you think it should. Browser security prevents transparent clipboard access, so here's how it actually works:
+
+1. **Look for the control tab** — Small handle on the left edge of the screen
+2. **Click it to open the panel** — Shows clipboard box and other controls
+3. **To paste into Bisq**: Copy text normally, paste it into the noVNC clipboard box, it gets sent to Bisq
+4. **To copy from Bisq**: Copy text in Bisq (Ctrl+C), it appears in the clipboard box, copy it from there
+
+If the clipboard tools are actually broken:
 ```bash
-# Check clipboard tools
+# Check clipboard tools are running
 docker exec bisq ps aux | grep -E "vncconfig|autocutsel"
 
-# Restart them
+# Restart them if needed
 docker exec bisq bash -c 'DISPLAY=:1 vncconfig -nowin &'
-docker exec bisq bash -c 'DISPLAY=:1 autocutsel -fork'
+docker exec bisq bash -c 'DISPLAY=:1 autocutsel -selection CLIPBOARD -fork'
 ```
 
 ### Performance Sucks

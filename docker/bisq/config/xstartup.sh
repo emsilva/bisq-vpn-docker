@@ -27,8 +27,8 @@ sleep 3
 # Enable clipboard support
 echo "Starting clipboard tools..."
 vncconfig -nowin &
-autocutsel -fork
-autocutsel -s CLIPBOARD -fork
+autocutsel -selection CLIPBOARD -fork
+autocutsel -selection PRIMARY -fork
 
 # Clean up desktop environment for better fullscreen experience
 echo "Cleaning up desktop environment..."
