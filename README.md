@@ -12,18 +12,15 @@
 If this actually works for you and saves you some pain:
 
 **Bitcoin**: `bc1qkdjdfeev6rgkqsszam2qr8r9ytky80cdy8zu2x`  
-**Monero**: 
-```
-48Q7CFnSjG4WGmYVusqnenggjEQSTw1QpJYuy7GaC1iifh8hZgUFmwi8cU84njepNVZRAjv6H687mBJgCYo5KBwW299BG9G
-```  
 **Ethereum**: `0x1963fa2E60606c7761Ea2242Ab00e0fBd096ba59`  
-**Solana**: `MNibKyhZka5NMNvRYJUiAG3MXaCTkAE1hACLuCX9RYr`
+**Solana**: `MNibKyhZka5NMNvRYJUiAG3MXaCTkAE1hACLuCX9RYr`  
+**Monero**: `48Q7CFnSjG4WGmYVusqnenggjEQSTw1QpJYuy7GaC1iifh8hZgUFmwi8cU84njepNVZRAjv6H687mBJgCYo5KBwW299BG9G`
 
 ---
 
 ## What This Actually Does
 
-Look, I got tired of installing Bisq on every machine I use. So I containerized it and made it accessible through a web browser. Now you can trade Bitcoin from anywhere without dealing with desktop app nonsense.
+Look, I got tired of installing Bisq on every machine I use. So I containerized it and made it accessible through a web browser. Now you can trade Bitcoin from anywhere without dealing with desktop app nonsense. Perfect for home servers, remote machines, or just keeping your main system clean.
 
 ### The Good Stuff
 
