@@ -167,4 +167,6 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD netstat -tuln | grep 5901 || exit 1
 
 # Use s6-overlay as init system
+# Note: Starting as root is intentional for s6-overlay process supervision
+# Individual services run as non-root user 'bisq' via s6 configuration
 ENTRYPOINT ["/init"]
