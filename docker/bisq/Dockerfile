@@ -120,6 +120,22 @@ COPY config/novnc-index.html /usr/share/novnc/index.html
 COPY config/bisq-favicon.ico /usr/share/novnc/bisq-favicon.ico
 COPY config/bisq-favicon.png /usr/share/novnc/bisq-favicon.png
 
+# Update noVNC HTML to use Bisq favicon and title
+RUN sed -i 's|<title>noVNC</title>|<title>Bisq VNC</title>|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-16x16.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-24x24.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-32x32.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-48x48.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-60x60.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-64x64.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-72x72.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-76x76.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-96x96.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-120x120.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-144x144.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-152x152.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html && \
+    sed -i 's|app/images/icons/novnc-192x192.png|bisq-favicon.png|g' /usr/share/novnc/vnc.html
+
 # Create directories with correct ownership
 RUN mkdir -p /home/bisq/.vnc \
     /home/bisq/.config/xfce4 \
