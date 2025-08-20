@@ -30,12 +30,16 @@ vncconfig -nowin &
 autocutsel -fork
 autocutsel -s CLIPBOARD -fork
 
-# Kill panel and screensaver after delay
-(sleep 5 && xfce4-panel -q 2>/dev/null && echo "Panel killed") &
-(sleep 5 && killall xfce4-screensaver 2>/dev/null && echo "Screensaver killed") &
+# Clean up desktop environment for better fullscreen experience
+echo "Cleaning up desktop environment..."
+(sleep 3 && xfce4-panel -q 2>/dev/null && echo "Panel killed") &
+(sleep 3 && killall xfce4-screensaver 2>/dev/null && echo "Screensaver killed") &
 
 # Disable screen blanking
 (sleep 3 && xset s off && xset s noblank && xset -dpms && echo "Screen blanking disabled") &
+
+# Ensure desktop is ready before Bisq starts
+sleep 2
 
 # Keep script running to maintain desktop session
 echo "Desktop environment started"

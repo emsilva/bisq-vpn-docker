@@ -31,20 +31,12 @@ echo "Environment: HOME=$HOME USER=$USER XDG_CACHE_HOME=$XDG_CACHE_HOME"
 # Ensure cache directories exist
 mkdir -p /home/bisq/.cache/dconf /home/bisq/.config/dconf
 
-# Start Bisq maximized
+# Start Bisq (window management handled by monitor-resize.sh)
 /opt/bisq/bin/Bisq --baseCurrencyNetwork=BTC_MAINNET &
 BISQ_PID=$!
-sleep 10
 
-# Wait for Bisq window and maximize it
-for i in {1..30}; do
-    if wmctrl -l | grep -i bisq > /dev/null 2>&1; then
-        echo "Maximizing Bisq window..."
-        wmctrl -r "Bisq" -b add,maximized_vert,maximized_horz
-        break
-    fi
-    sleep 1
-done
+echo "Bisq started with PID: $BISQ_PID"
+echo "Window positioning will be handled by monitor-resize script"
 
 # Keep script running so supervisor doesn't restart it
 wait $BISQ_PID
