@@ -100,9 +100,11 @@ prod-up: ## Start production containers with secrets
 
 backup: ## Backup Bisq data
 	@echo "Creating backup..."
-	mkdir -p backups/$(shell date +%Y%m%d_%H%M%S)
-	cp -r volumes/bisq-data backups/$(shell date +%Y%m%d_%H%M%S)/
-	@echo "✅ Backup completed in backups/$(shell date +%Y%m%d_%H%M%S)/"
+	@timestamp=$$(date +%Y%m%d_%H%M%S); \
+	backup_dir="backups/$$timestamp"; \
+	mkdir -p "$$backup_dir"; \
+	cp -r volumes/bisq-data "$$backup_dir"/; \
+	echo "✅ Backup completed in $$backup_dir/"
 
 update-deps: ## Update all dependencies
 	@echo "Updating dependencies..."

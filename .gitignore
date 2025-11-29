@@ -19,6 +19,10 @@ docker/gluetun/config/gluetun.env
 # IDE files
 .vscode/
 .idea/
+.playwright/
+.playwright-mcp/
+playwright-report/
+test-results/
 
 # Logs
 *.log

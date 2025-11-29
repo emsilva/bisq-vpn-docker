@@ -24,15 +24,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    # Resource limits for VPN container
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
+    # Resource limits for VPN container (honored by docker compose)
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1.0
     # Logging configuration
     logging:
       driver: "json-file"
@@ -73,14 +68,9 @@ services:
     tty: true
     restart: unless-stopped
     # Resource limits for Bisq application container
-    deploy:
-      resources:
-        limits:
-          cpus: '4.0'
-          memory: 4G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
+    mem_limit: 4g
+    mem_reservation: 1g
+    cpus: 4.0
     # Logging configuration
     logging:
       driver: "json-file"

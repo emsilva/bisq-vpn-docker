@@ -18,7 +18,30 @@ echo ""
 
 # Function to get current version from Dockerfile
 get_current_version() {
-    grep "ENV BISQ_VERSION=" docker/bisq/Dockerfile | cut -d'=' -f2
+    local dockerfile="docker/bisq/Dockerfile"
+    local arg_line
+    local env_line
+
+    arg_line=$(grep -E '^ARG BISQ_VERSION=' "$dockerfile" | head -1 || true)
+    if [[ -n "$arg_line" ]]; then
+        echo "${arg_line#ARG BISQ_VERSION=}"
+        return 0
+    fi
+
+    env_line=$(grep -E '^ENV BISQ_VERSION=' "$dockerfile" | head -1 || true)
+    if [[ -n "$env_line" ]]; then
+        echo "${env_line#ENV BISQ_VERSION=}"
+        return 0
+    fi
+
+    env_line=$(grep -E '^BISQ_VERSION=' .env.example | head -1 || true)
+    if [[ -n "$env_line" ]]; then
+        echo "${env_line#BISQ_VERSION=}"
+        return 0
+    fi
+
+    echo ""
+    return 1
 }
 
 # Function to get latest version from GitHub
@@ -78,15 +101,52 @@ check_version_exists() {
 }
 
 # Function to update version in Dockerfile
-update_dockerfile() {
+update_dockerfile_versions() {
     local new_version=$1
-    if sed -i "s/ENV BISQ_VERSION=.*/ENV BISQ_VERSION=${new_version}/" docker/bisq/Dockerfile; then
-        echo -e "${GREEN}✓${NC} Dockerfile updated to version ${new_version}"
+    local success=true
+    local dockerfiles=(
+        docker/bisq/Dockerfile
+        docker/bisq/Dockerfile.multistage
+        docker/bisq/Dockerfile.secure
+    )
+
+    for file in "${dockerfiles[@]}"; do
+        if [ ! -f "$file" ]; then
+            continue
+        fi
+
+        if grep -q "ARG BISQ_VERSION=" "$file"; then
+            sed -i -E "s/(ARG BISQ_VERSION=)[0-9.]+/\\1${new_version}/" "$file" || success=false
+        fi
+
+        if grep -q "ENV BISQ_VERSION" "$file"; then
+            sed -i -E "s/(ENV BISQ_VERSION=)[0-9.]+/\\1${new_version}/" "$file" || true
+        fi
+
+    done
+
+    if $success; then
+        echo -e "${GREEN}✓${NC} Dockerfiles updated to version ${new_version}"
         return 0
     else
-        echo -e "${RED}✗${NC} Failed to update Dockerfile"
+        echo -e "${RED}✗${NC} Failed to update one or more Dockerfiles"
         return 1
     fi
+}
+
+update_compose_defaults() {
+    local new_version=$1
+    local compose_files=(
+        docker-compose.yml
+        docker-compose.dev.yml
+        docker-compose.vpn-dev.yml
+    )
+
+    for file in "${compose_files[@]}"; do
+        if [ -f "$file" ]; then
+            sed -i -E "s/BISQ_VERSION=\$\{BISQ_VERSION:-[0-9.]+\}/BISQ_VERSION=\$\{BISQ_VERSION:-${new_version}\}/" "$file" 2>/dev/null || true
+        fi
+    done
 }
 
 # Function to backup current data
@@ -306,7 +366,8 @@ else
     
     # Update Dockerfile
     echo ""
-    if update_dockerfile "$TARGET_VERSION"; then
+    if update_dockerfile_versions "$TARGET_VERSION"; then
+        update_compose_defaults "$TARGET_VERSION"
         # Rebuild containers
         echo ""
         if rebuild_containers; then
