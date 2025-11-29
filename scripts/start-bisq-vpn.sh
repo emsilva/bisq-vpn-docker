@@ -82,7 +82,7 @@ start_containers() {
     echo -e "${BLUE}Access Bisq:${NC}"
     echo "  Web Browser (noVNC): http://localhost:6080"
     echo "  VNC Client: localhost:5901"
-    echo "  VNC Password: bisqvnc"
+    echo "  VNC Password: ${VNC_PASSWORD:-bisqvnc}"
     echo ""
     echo -e "${YELLOW}Note: It may take a minute for Bisq to fully load${NC}"
     echo "========================================="

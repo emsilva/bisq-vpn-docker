@@ -2,6 +2,8 @@
 # Pin to specific Ubuntu 24.04 LTS digest for reproducibility
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9
 
+ARG DEFAULT_VNC_PASSWORD=bisqvnc
+
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \
       org.opencontainers.image.description="Bisq decentralized Bitcoin exchange running through VPN with noVNC web interface" \
@@ -19,13 +21,14 @@ LABEL org.opencontainers.image.title="Bisq VPN Container" \
 # Additional custom labels
 LABEL bisq.version="${BISQ_VERSION:-1.9.21}" \
       s6.overlay.version="3.2.1.0" \
-      vnc.password="bisqvnc" \
+      vnc.password="${DEFAULT_VNC_PASSWORD}" \
       vnc.port="5901" \
       novnc.port="6080" \
       container.type="desktop" \
       security.vpn="required"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV DEFAULT_VNC_PASSWORD=${DEFAULT_VNC_PASSWORD}
 ENV TZ=America/Sao_Paulo
 
 # Set shell to bash with pipefail option  
@@ -78,9 +81,9 @@ RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.ta
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.tar.xz
 
-# Create user for running Bisq with explicit UID/GID 1001
-RUN groupadd -g 1001 bisq && \
-    useradd -m -u 1001 -g 1001 -s /bin/bash bisq && \
+# Create user for running Bisq
+# The container will be configured with proper UID/GID via s6-overlay init script
+RUN useradd -m -s /bin/bash bisq && \
     echo "bisq:bisq" | chpasswd && \
     usermod -aG sudo bisq && \
     echo "bisq ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -156,8 +159,9 @@ COPY config/start-bisq.sh /home/bisq/start-bisq.sh
 COPY config/start-vnc.sh /home/bisq/start-vnc.sh
 COPY config/disable-screensaver.sh /home/bisq/disable-screensaver.sh
 
-# Set up VNC and script permissions
-RUN echo "bisqvnc" | vncpasswd -f > /home/bisq/.vnc/passwd && \
+# Set up VNC password and script permissions
+# Create password file during build to ensure it exists when VNC starts
+RUN printf '%s\n' "${DEFAULT_VNC_PASSWORD}" | vncpasswd -f > /home/bisq/.vnc/passwd && \
     chmod 600 /home/bisq/.vnc/passwd && \
     chmod +x /home/bisq/.vnc/xstartup && \
     chmod +x /home/bisq/monitor-resize.sh /home/bisq/start-bisq.sh /home/bisq/start-vnc.sh /home/bisq/disable-screensaver.sh

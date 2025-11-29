@@ -15,8 +15,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install only download dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    aria2=1.36.0-1 \
-    curl=7.81.0-1ubuntu1.18 \
+    aria2 \
+    curl \
     ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -50,14 +50,16 @@ FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c03
 # Install s6-overlay
 ARG S6_OVERLAY_VERSION=3.2.1.0
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C /s6-overlay -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
+RUN mkdir -p /s6-overlay && tar -C /s6-overlay -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN mkdir -p /s6-overlay && tar -C /s6-overlay -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.tar.xz
+RUN tar -C /s6-overlay -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.tar.xz
 
 # =============================================================================
 # STAGE 3: FINAL RUNTIME IMAGE
 # =============================================================================
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runtime
+
+ARG DEFAULT_VNC_PASSWORD=bisqvnc
 
 # Image metadata following OCI standards
 LABEL org.opencontainers.image.title="Bisq VPN Container" \
@@ -77,13 +79,14 @@ LABEL org.opencontainers.image.title="Bisq VPN Container" \
 ARG BISQ_VERSION=1.9.21
 LABEL bisq.version="${BISQ_VERSION}" \
       s6.overlay.version="3.2.1.0" \
-      vnc.password="bisqvnc" \
+      vnc.password="${DEFAULT_VNC_PASSWORD}" \
       vnc.port="5901" \
       novnc.port="6080" \
       container.type="desktop" \
       security.vpn="required"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV DEFAULT_VNC_PASSWORD=${DEFAULT_VNC_PASSWORD}
 ENV TZ=America/Sao_Paulo
 ENV BISQ_VERSION=${BISQ_VERSION}
 
@@ -93,24 +96,27 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Install only runtime dependencies (smaller footprint)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Desktop environment
-    xfce4=4.16 \
-    xfce4-terminal=0.8.10-1ubuntu1 \
-    dbus-x11=1.12.20-2ubuntu4.1 \
+    xfce4 \
+    xfce4-terminal \
+    dbus-x11 \
     # VNC server
-    tigervnc-standalone-server=1.12.0+dfsg-4ubuntu0.1 \
-    tigervnc-common=1.12.0+dfsg-4ubuntu0.1 \
+    tigervnc-standalone-server \
+    tigervnc-common \
+    tigervnc-tools \
     # noVNC for web access
-    novnc=1:1.2.0-2 \
-    websockify=0.9.0-2 \
-    # Java runtime for Bisq (pin to LTS version)
+    novnc \
+    python3-websockify \
+    # Java runtime for Bisq
     openjdk-11-jre \
-    # Essential utilities only
-    sudo=1.9.9-1ubuntu2.4 \
-    # Window management for fullscreen
-    wmctrl=1.07-7build1 \
-    # Clipboard synchronization
-    autocutsel=0.10.0-10build1 \
-    # Clean up
+    # Utilities required by runtime scripts
+    wmctrl \
+    autocutsel \
+    x11-xserver-utils \
+    net-tools \
+    iputils-ping \
+    dnsutils \
+    ca-certificates \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/* \
@@ -119,12 +125,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy s6-overlay from preparation stage
 COPY --from=s6-overlay /s6-overlay/ /
 
-# Create user for running Bisq with explicit UID/GID 1001
-RUN groupadd -g 1001 bisq && \
-    useradd -m -u 1001 -g 1001 -s /bin/bash bisq && \
-    echo "bisq:bisq" | chpasswd && \
-    usermod -aG sudo bisq && \
-    echo "bisq ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Create user for running Bisq with explicit UID/GID 1000
+RUN groupadd -g 1000 bisq && \
+    useradd -m -u 1000 -g 1000 -s /bin/bash bisq && \
+    echo "bisq:bisq" | chpasswd
 
 # Copy and install Bisq from downloader stage
 COPY --from=downloader /cache/Bisq-64bit-${BISQ_VERSION}.deb /tmp/
@@ -146,16 +150,17 @@ RUN mkdir -p /home/bisq/.vnc \
     /home/bisq/.config/xfce4 \
     /home/bisq/Desktop \
     /var/log/supervisor \
-    /home/bisq/.local/share/Bisq && \
+    /home/bisq/.local/share/Bisq \
+    /var/run/bisq && \
     chown -R bisq:bisq /home/bisq/.vnc \
     /home/bisq/.config \
     /home/bisq/Desktop \
     /home/bisq/.local \
     /var/log/supervisor \
-    /var/run
+    /var/run/bisq
 
 # VNC configuration
-RUN echo "bisqvnc" | vncpasswd -f > /home/bisq/.vnc/passwd && \
+RUN printf '%s\n' "${DEFAULT_VNC_PASSWORD}" | vncpasswd -f > /home/bisq/.vnc/passwd && \
     chmod 600 /home/bisq/.vnc/passwd
 
 # Copy and set up xstartup script

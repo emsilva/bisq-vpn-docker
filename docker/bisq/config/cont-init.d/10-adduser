@@ -1,8 +1,16 @@
 #!/command/with-contenv bash
 
+set -euo pipefail
+
 # Set default values
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
+DEFAULT_VNC_PASSWORD=${DEFAULT_VNC_PASSWORD:-bisqvnc}
+EFFECTIVE_VNC_PASSWORD=${VNC_PASSWORD:-$DEFAULT_VNC_PASSWORD}
+VNC_SENTINEL=/var/run/bisq/user-setup.done
+
+mkdir -p /var/run/bisq
+rm -f "$VNC_SENTINEL"
 
 # Get current bisq user info
 CURRENT_UID=$(id -u bisq)
@@ -14,19 +22,40 @@ echo "Setting user bisq to PUID=${PUID} PGID=${PGID}"
 if [[ "$PUID" != "$CURRENT_UID" ]] || [[ "$PGID" != "$CURRENT_GID" ]]; then
     echo "Current UID/GID: $CURRENT_UID/$CURRENT_GID"
     echo "Changing to: $PUID/$PGID"
-    
+
+    # Check if target GID is in use by another group
+    if getent group $PGID > /dev/null 2>&1; then
+        EXISTING_GROUP=$(getent group $PGID | cut -d: -f1)
+        if [[ "$EXISTING_GROUP" != "bisq" ]]; then
+            echo "GID $PGID is already used by group $EXISTING_GROUP, deleting it first"
+            groupdel $EXISTING_GROUP 2>/dev/null || true
+        fi
+    fi
+
+    # Check if target UID is in use by another user
+    if getent passwd $PUID > /dev/null 2>&1; then
+        EXISTING_USER=$(getent passwd $PUID | cut -d: -f1)
+        if [[ "$EXISTING_USER" != "bisq" ]]; then
+            echo "UID $PUID is already used by user $EXISTING_USER, deleting it first"
+            userdel $EXISTING_USER 2>/dev/null || true
+        fi
+    fi
+
     # Change group first
     groupmod -g $PGID bisq
-    
+
     # Change user
     usermod -u $PUID -g $PGID bisq
-    
+
     # Fix ownership of key directories
     echo "Fixing ownership of directories..."
-    chown -R bisq:bisq \
+    chown -hR bisq:bisq \
         /home/bisq \
-        /var/log/supervisor \
-        /var/run
+        /var/log/supervisor
+
+    # Ensure runtime directory for Bisq is owned correctly without touching system-wide /var/run
+    mkdir -p /var/run/bisq
+    chown -R bisq:bisq /var/run/bisq
 else
     echo "UID/GID already correct"
 fi
@@ -37,11 +66,45 @@ mkdir -p \
     /home/bisq/.config/xfce4 \
     /home/bisq/.local/share/Bisq \
     /var/log/supervisor \
-    /var/run
+    /var/run/bisq
 
-chown -R bisq:bisq \
-    /home/bisq \
-    /var/log/supervisor \
-    /var/run
+# Fix ownership of directories (excluding .vnc to preserve password file while we update)
+find /home/bisq -path /home/bisq/.vnc -prune -o -exec chown -h bisq:bisq {} +
+chown -hR bisq:bisq /var/log/supervisor /var/run/bisq
+
+# Handle VNC directory specially
+chown bisq:bisq /home/bisq/.vnc
+chmod 755 /home/bisq/.vnc
+
+PASSWORD_PATH=/home/bisq/.vnc/passwd
+TEMP_PASSWD=$(mktemp /tmp/vnc-passwd.XXXXXX)
+trap 'rm -f "$TEMP_PASSWD"' EXIT
+
+printf '%s\n' "$EFFECTIVE_VNC_PASSWORD" | vncpasswd -f > "$TEMP_PASSWD"
+chmod 600 "$TEMP_PASSWD"
+
+if [[ -f "$PASSWORD_PATH" ]]; then
+    if cmp -s "$TEMP_PASSWD" "$PASSWORD_PATH"; then
+        echo "VNC password file already up to date"
+        rm -f "$TEMP_PASSWD"
+        trap - EXIT
+    else
+        echo "Updating VNC password file..."
+        mv "$TEMP_PASSWD" "$PASSWORD_PATH"
+        trap - EXIT
+    fi
+else
+    echo "Creating VNC password file..."
+    mv "$TEMP_PASSWD" "$PASSWORD_PATH"
+    trap - EXIT
+fi
+
+chown bisq:bisq "$PASSWORD_PATH"
+chmod 600 "$PASSWORD_PATH"
+
+# Ensure xstartup script has execute permissions
+chmod +x /home/bisq/.vnc/xstartup
+chown bisq:bisq /home/bisq/.vnc/xstartup
 
 echo "User setup complete"
+touch "$VNC_SENTINEL"
