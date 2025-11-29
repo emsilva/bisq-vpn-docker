@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+# Ensure X socket dirs exist to silence startup warnings
+mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
+chown root:root /tmp/.X11-unix /tmp/.ICE-unix
+chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix

@@ -68,7 +68,7 @@ services:
       - DISPLAY=:1
       - VNC_PASSWORD=${VNC_PASSWORD:-bisqvnc}
       - TZ=${TZ:-America/Sao_Paulo}
-      - JAVA_TOOL_OPTIONS=-Xmx3g -XX:+UseG1GC
+      - JAVA_TOOL_OPTIONS=-Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError
       # User/Group ID mapping (defaults to 1000:1000)
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}

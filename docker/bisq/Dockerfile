@@ -40,6 +40,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfce4 \
     xfce4-terminal \
     dbus-x11 \
+    # Accessibility bus (quiet AT-SPI warnings)
+    at-spi2-core \
+    # Power management helper (avoids pm-is-supported warning)
+    pm-utils \
     # VNC server
     tigervnc-standalone-server \
     tigervnc-common \
@@ -166,6 +170,7 @@ RUN printf '%s\n' "${DEFAULT_VNC_PASSWORD}" | vncpasswd -f > /home/bisq/.vnc/pas
 # Copy s6-overlay configuration
 COPY config/s6-overlay/ /etc/s6-overlay/
 COPY config/cont-init.d/ /etc/cont-init.d/
+RUN chmod +x /etc/cont-init.d/*
 
 # Copy XFCE configuration files
 RUN mkdir -p /home/bisq/.config/xfce4/xfconf/xfce-perchannel-xml

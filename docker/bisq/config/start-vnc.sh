@@ -57,6 +57,8 @@ if [[ ! -f /home/bisq/.vnc/passwd ]]; then
 fi
 
 # Clean up any existing locks
+mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
+chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 2>/dev/null
 
 # Start VNC server in background

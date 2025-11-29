@@ -266,6 +266,7 @@ Either way, your actual trading goes through Tor. The VPN just helps you reach t
 | `TZ` | `America/Sao_Paulo` | Container timezone |
 | `PUID` | `1000` | File ownership stuff |
 | `PGID` | `1000` | More file ownership stuff |
+| `JAVA_TOOL_OPTIONS` | `-Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError` | JVM tuning for smoother DAO sync |
 
 ### VPN Settings (Skip If Direct)
 
