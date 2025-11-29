@@ -7,8 +7,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      # VPN testing port
-      - 8000:8000
+      # VPN testing port (was 8000:8000; removed to avoid port clashes and exposure)
       # Bisq noVNC web interface
       - 6080:6080
       # VNC direct access (optional)
@@ -17,6 +16,11 @@ services:
       - ./volumes/gluetun:/gluetun
     env_file:
       - .env
+    environment:
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+      # Control server kept internal; change or publish only if needed
+      - HTTP_CONTROL_SERVER_ADDRESS=:8000
+      - HTTP_CONTROL_SERVER_LOG=off
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "ip link show tun0 || exit 1"]
