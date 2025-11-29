@@ -316,6 +316,7 @@ Common fixes:
 - Make sure `WIREGUARD_ENDPOINT_IP` is an actual IP address
 - Check if your VPN subscription is active
 - Some VPN providers block Docker traffic (switch servers)
+- DNS blocklists are disabled by default to avoid slow starts; set `BLOCK_MALICIOUS=on` if you want filtering (expect longer startup).
 
 ### Web Interface Dead
 
