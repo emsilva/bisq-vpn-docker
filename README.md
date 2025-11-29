@@ -134,12 +134,15 @@ PGID=1000                    # Your group ID
 If your ISP blocks Tor like some kind of authoritarian regime:
 
 ```bash
-vim .env
+mkdir -p volumes/gluetun/secrets
+printf 'YOUR_WG_PRIVATE_KEY\n' > volumes/gluetun/secrets/wg_private_key
+printf 'YOUR_WG_PRESHARED_KEY\n' > volumes/gluetun/secrets/wg_preshared_key  # leave empty if you don't use one
+chmod 600 volumes/gluetun/secrets/wg_private_key volumes/gluetun/secrets/wg_preshared_key
+vim .env  # fill in the non-secret bits below
 ```
 
-Fill in the VPN section:
+Fill in the VPN section (keys stay in the files above):
 ```env
-WIREGUARD_PRIVATE_KEY=your_private_key_here
 WIREGUARD_ADDRESSES=10.x.x.x/32
 WIREGUARD_PUBLIC_KEY=server_public_key_here
 WIREGUARD_ENDPOINT_IP=x.x.x.x  # IP address, not hostname
@@ -266,9 +269,10 @@ Either way, your actual trading goes through Tor. The VPN just helps you reach t
 
 ### VPN Settings (Skip If Direct)
 
-| Setting | Required | What It Does |
-|---------|----------|--------------|
-| `WIREGUARD_PRIVATE_KEY` | Yes | Your WireGuard private key |
+| Item | Required | Where/What |
+|------|----------|------------|
+| `volumes/gluetun/secrets/wg_private_key` | Yes | File content = your WireGuard private key (chmod 600) |
+| `volumes/gluetun/secrets/wg_preshared_key` | Optional | File content = your preshared key (blank if none) |
 | `WIREGUARD_ADDRESSES` | Yes | Your VPN IP (IPv4 only) |
 | `WIREGUARD_PUBLIC_KEY` | Yes | Server's public key |
 | `WIREGUARD_ENDPOINT_IP` | Yes | Server IP (must be IP, not domain) |
@@ -280,7 +284,8 @@ Either way, your actual trading goes through Tor. The VPN just helps you reach t
 |------|------|--------|
 | `6080` | Web interface | http://localhost:6080 |
 | `5901` | Direct VNC | VNC client to localhost:5901 |
-| `8000` | Health check | VPN setups only |
+| `8000` | Control server (internal only) | not published |
+| `9999` | Health check (internal) | not published |
 
 ## Security Notes
 

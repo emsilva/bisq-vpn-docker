@@ -1,6 +1,6 @@
 services:
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.40.1
     container_name: gluetun
     cap_add:
       - NET_ADMIN
@@ -17,10 +17,13 @@ services:
     env_file:
       - .env
     environment:
+      - LOG_LEVEL=warn
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
       # Control server kept internal; change or publish only if needed
       - HTTP_CONTROL_SERVER_ADDRESS=:8000
       - HTTP_CONTROL_SERVER_LOG=off
+      - WIREGUARD_PRIVATE_KEY_SECRETFILE=/gluetun/secrets/wg_private_key
+      - WIREGUARD_PRESHARED_KEY_SECRETFILE=/gluetun/secrets/wg_preshared_key
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "ip link show tun0 || exit 1"]
