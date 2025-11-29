@@ -56,7 +56,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     supervisor \
-    sudo \
     xdg-utils \
     # Network tools for debugging
     net-tools \
@@ -84,9 +83,7 @@ RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.ta
 # Create user for running Bisq
 # The container will be configured with proper UID/GID via s6-overlay init script
 RUN useradd -m -s /bin/bash bisq && \
-    echo "bisq:bisq" | chpasswd && \
-    usermod -aG sudo bisq && \
-    echo "bisq ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "bisq:bisq" | chpasswd
 
 # Download and install Bisq (use build arg for version)
 ARG BISQ_VERSION=1.9.21
